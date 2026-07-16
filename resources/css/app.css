@@ -1,0 +1,43 @@
+@import 'tailwindcss';
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+@source '../views';
+
+/*
+ * Tokens derivados do legado (_reversa_sdd/design-system/tokens-derived.md).
+ * Semântica das cores de status vem da grade anual de mensalidades do legado.
+ */
+@theme {
+    --font-sans: 'Montserrat', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
+        'Segoe UI Symbol', 'Noto Color Emoji';
+
+    --color-brand: #2ca8ff;
+    --color-brand-dark: #1b8fe0;
+    --color-accent: #f96332;
+
+    /* grade anual: pago+contabilizado | pago+não contabilizado | vencida | parcial */
+    --color-status-pago: #9df5d3;
+    --color-status-pago-nao-contabilizado: #90ee90;
+    --color-status-vencida: #ffc0cb;
+    --color-status-parcial: #fff3cd;
+    --color-status-total: #e6fffa;
+}
+
+@layer utilities {
+    .bg-status-pago {
+        background-color: var(--color-status-pago);
+    }
+    .bg-status-pago-nao-contabilizado {
+        background-color: var(--color-status-pago-nao-contabilizado);
+    }
+    .bg-status-vencida {
+        background-color: var(--color-status-vencida);
+    }
+    .bg-status-parcial {
+        background-color: var(--color-status-parcial);
+    }
+    .bg-status-total {
+        background-color: var(--color-status-total);
+    }
+}
