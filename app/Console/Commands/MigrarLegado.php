@@ -263,8 +263,9 @@ class MigrarLegado extends Command
             DB::table('pagamentos')->insert([
                 'id' => $p->id,
                 'proprietario_id' => $p->proprietario_id,
-                'imovel_id' => $p->imovel_id,
-                'pagamento_origem_id' => $p->pagamento_origem_id,
+                // Legado usa 0 no lugar de NULL nas FKs opcionais — normaliza
+                'imovel_id' => $p->imovel_id ?: null,
+                'pagamento_origem_id' => $p->pagamento_origem_id ?: null,
                 'data' => $p->data,
                 'descricao' => (string) ($p->descricao ?? ''),
                 'valor' => $p->valor ?? 0,

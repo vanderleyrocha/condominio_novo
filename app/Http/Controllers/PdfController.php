@@ -67,14 +67,17 @@ class PdfController extends Controller
             $complementoTextoDivida = 'ainda';
         }
 
-        // Dívidas anteriores corrigidas: mensalidades em aberto do mesmo imóvel
-        // com vencimento < pago_em, data-base = pago_em
+        // Dívidas anteriores corrigidas: mensalidades do mesmo imóvel com
+        // vencimento < pago_em do recibo. Paridade com o CÓDIGO REAL do legado
+        // (MensalidadeController::recibo): a data-base é o pago_em DE CADA
+        // mensalidade em aberto (null => hoje), não o pago_em do recibo —
+        // confirmado na comparação golden de 2026-07-16.
         $mensalidadesAnteriores = Mensalidade::query()
             ->where('imovel_id', $mensalidade->imovel_id)
             ->where('vencimento', '<', $mensalidade->pago_em->toDateString())
             ->get();
 
-        $dividasCorrigidas = $mensalidadesAnteriores->sum(function (Mensalidade $m) use ($mensalidade): float {
+        $dividasCorrigidas = $mensalidadesAnteriores->sum(function (Mensalidade $m): float {
             $saldo = (float) $m->valor + (float) $m->acrescimo
                 - (float) $m->desconto - (float) $m->valor_pago;
 
@@ -85,7 +88,7 @@ class PdfController extends Controller
             return $this->correcaoService->corrigirMensalidade(
                 $saldo,
                 $m->vencimento,
-                $mensalidade->pago_em,
+                $m->pago_em ?? now(),
             );
         });
 

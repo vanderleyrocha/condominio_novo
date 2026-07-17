@@ -16,7 +16,14 @@
 
         table {
             line-height: 1.3;
-            font-size: 10pt;
+            /* 8pt para caber 1 coluna por ano (14+) no A4 landscape sem corte
+               de coluna pelo dompdf — a coluna do ano corrente era clipada em 10pt */
+            font-size: 8pt;
+        }
+
+        table th,
+        table td {
+            padding: 2pt 3pt;
         }
 
         thead th {

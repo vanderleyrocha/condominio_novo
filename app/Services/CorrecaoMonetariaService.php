@@ -77,7 +77,13 @@ class CorrecaoMonetariaService
     private function aplicar(float $valorLiquido, Collection $indices, MetodoCorrecao $metodo): float
     {
         if ($metodo === MetodoCorrecao::SomaSimples) {
-            $acumulado = (float) $indices->sum('indice');
+            // Paridade de arredondamento com o legado: a soma dos índices é feita
+            // pelo banco (aritmética DECIMAL exata via SUM), não em floats no PHP —
+            // evita flips de centavo em fronteiras de round() (comparação golden 2026-07-16)
+            $acumulado = (float) $indices->reduce(
+                fn (string $carry, $i): string => bcadd($carry, (string) $i->indice, 4),
+                '0',
+            );
 
             return round($valorLiquido * (1 + $acumulado / 100), 2);
         }

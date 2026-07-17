@@ -19,7 +19,14 @@
 
         table {
             line-height: 2.6;
-            font-size: 10px;
+            /* 8px: 19 colunas (16 imoveis + Outras + Total + Despesas) precisam
+               caber no A4 landscape - em 10px o dompdf cortava as ultimas colunas */
+            font-size: 8px;
+        }
+
+        table th,
+        table td {
+            padding: 1px 2px;
         }
 
         .card-footer {
