@@ -10,7 +10,8 @@
         "barryvdh/laravel-dompdf": "^3.1",
         "laravel/framework": "^13.8",
         "laravel/tinker": "^3.0",
-        "livewire/livewire": "^4.3"
+        "livewire/livewire": "^4.3",
+        "owen-it/laravel-auditing": "^14.0"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",
@@ -83,6 +84,19 @@
         "allow-plugins": {
             "pestphp/pest-plugin": true,
             "php-http/discovery": true
+        },
+        "audit": {
+            "ignore": {
+                "PKSA-gh7h-hhy4-byg7": "dompdf: advisory sem fix no range ^3.0; versão já instalada antes da remodelagem",
+                "PKSA-6r8f-nxsb-67bq": "dompdf: idem",
+                "PKSA-cv56-2228-pzr6": "dompdf: idem",
+                "PKSA-mwt3-h9tv-kx78": "dompdf: idem",
+                "PKSA-mckv-s5hg-868k": "dompdf: idem",
+                "PKSA-hp6n-n4kz-21wk": "dompdf: idem",
+                "PKSA-bbs6-q5q9-f3t4": "guzzle: advisory sem fix no range ^7.8.2; versão já instalada",
+                "PKSA-qxvb-2bpp-dnk6": "guzzle: idem",
+                "PKSA-fy2t-3c5f-827y": "guzzle: idem"
+            }
         }
     },
     "minimum-stability": "stable",

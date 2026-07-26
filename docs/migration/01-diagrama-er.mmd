@@ -1,0 +1,256 @@
+erDiagram
+    CONDOMINIOS ||--o{ BLOCOS : possui
+    CONDOMINIOS ||--o{ UNIDADES : possui
+    CONDOMINIOS ||--o{ PLANOS_CONTAS : define
+    CONDOMINIOS ||--o{ LANCAMENTOS_FINANCEIROS : registra
+    CONDOMINIOS ||--o{ COBRANCAS_EXTRAORDINARIAS : cria
+    CONDOMINIOS ||--o{ REGRAS_REAJUSTE : define
+    CONDOMINIOS ||--o{ CONFIGURACOES : possui
+
+    BLOCOS ||--o{ UNIDADES : agrupa
+
+    UNIDADES ||--o{ UNIDADE_PESSOA : possui
+    UNIDADES ||--o{ TAXAS_CONDOMINIAIS : gera
+    UNIDADES ||--o{ PAGAMENTOS : recebe
+    UNIDADES ||--o{ LANCAMENTOS_FINANCEIROS : referencia
+
+    PESSOAS ||--o{ UNIDADE_PESSOA : vincula
+    PESSOAS ||--o{ PAGAMENTOS : realiza
+    PESSOAS ||--o{ USERS : acessa
+
+    TAXAS_CONDOMINIAIS ||--o{ PAGAMENTO_TAXA : recebe
+    PAGAMENTOS ||--o{ PAGAMENTO_TAXA : aplica
+    PAGAMENTOS ||--o{ PAGAMENTOS : estorna
+
+    COBRANCAS_EXTRAORDINARIAS ||--o{ COBRANCA_EXTRAORDINARIA_TAXA : gera
+    TAXAS_CONDOMINIAIS ||--o{ COBRANCA_EXTRAORDINARIA_TAXA : compoe
+
+    PLANOS_CONTAS ||--o{ LANCAMENTOS_FINANCEIROS : classifica
+
+    %% Regras de reajuste referenciam o TIPO de indice (serie), nao uma linha mensal
+
+    USERS ||--o{ AUDITS : gera
+    CONDOMINIOS ||--o{ CONDOMINIO_USER : autoriza
+    USERS ||--o{ CONDOMINIO_USER : acessa
+
+    CONDOMINIOS {
+        bigint id PK
+        string nome
+        string cnpj UK
+        string endereco
+        string cidade
+        string uf
+        string cep
+        timestamp created_at
+        timestamp updated_at
+        timestamp deleted_at
+    }
+
+    BLOCOS {
+        bigint id PK
+        bigint condominio_id FK
+        string nome
+        timestamp created_at
+        timestamp updated_at
+        timestamp deleted_at
+    }
+
+    UNIDADES {
+        bigint id PK
+        bigint condominio_id FK
+        bigint bloco_id FK
+        string identificacao
+        decimal fracao_ideal
+        decimal area
+        tinyint vagas_garagem
+        timestamp created_at
+        timestamp updated_at
+        timestamp deleted_at
+    }
+
+    PESSOAS {
+        bigint id PK
+        string nome
+        string cpf_cnpj UK
+        string email
+        string telefone
+        enum tipo
+        timestamp created_at
+        timestamp updated_at
+        timestamp deleted_at
+    }
+
+    UNIDADE_PESSOA {
+        bigint id PK
+        bigint unidade_id FK
+        bigint pessoa_id FK
+        enum papel
+        boolean responsavel_financeiro
+        date data_inicio
+        date data_fim
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    PLANOS_CONTAS {
+        bigint id PK
+        bigint condominio_id FK
+        string codigo
+        string descricao
+        enum tipo
+        timestamp created_at
+        timestamp updated_at
+        timestamp deleted_at
+    }
+
+    LANCAMENTOS_FINANCEIROS {
+        bigint id PK
+        bigint condominio_id FK
+        bigint plano_conta_id FK
+        bigint unidade_id FK
+        date data_competencia
+        date data_lancamento
+        string descricao
+        decimal valor
+        enum natureza
+        boolean contabilizado
+        string origem_type
+        bigint origem_id
+        timestamp created_at
+        timestamp updated_at
+        timestamp deleted_at
+    }
+
+    TAXAS_CONDOMINIAIS {
+        bigint id PK
+        bigint unidade_id FK "UK composta (unidade_id, competencia_ano, competencia_mes)"
+        tinyint competencia_mes
+        smallint competencia_ano
+        date vencimento
+        decimal valor_original
+        decimal valor_desconto
+        decimal valor_acrescimo
+        enum status
+        boolean contabilizado
+        timestamp created_at
+        timestamp updated_at
+        timestamp deleted_at
+    }
+
+    %% PAGAMENTOS: durante a coexistencia com o schema antigo a tabela fisica
+    %% chama-se `pagamentos_novo` (Model PagamentoNovo) — renomeada para
+    %% `pagamentos` no cutover (Fase 4), quando a tabela antiga sai de cena.
+    PAGAMENTOS {
+        bigint id PK
+        bigint unidade_id FK "nullable (legado tem pagamentos sem imovel)"
+        bigint pessoa_id FK
+        date data_pagamento
+        string descricao
+        decimal valor_total "negativo em estornos (mesma convencao do legado)"
+        enum forma_pagamento
+        bigint estorno_de_id FK
+        timestamp created_at
+        timestamp updated_at
+        timestamp deleted_at
+    }
+
+    PAGAMENTO_TAXA {
+        bigint id PK
+        bigint pagamento_id FK
+        bigint taxa_condominial_id FK
+        decimal valor_aplicado
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    COBRANCAS_EXTRAORDINARIAS {
+        bigint id PK
+        bigint condominio_id FK
+        string nome
+        decimal valor_total
+        enum metodo_rateio
+        date vigencia_inicio
+        date vigencia_fim
+        boolean ativa
+        timestamp created_at
+        timestamp updated_at
+        timestamp deleted_at
+    }
+
+    COBRANCA_EXTRAORDINARIA_TAXA {
+        bigint id PK
+        bigint cobranca_extraordinaria_id FK
+        bigint taxa_condominial_id FK
+        decimal valor
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    INDICES_ECONOMICOS {
+        bigint id PK
+        enum tipo "UK composta (tipo, ano, mes)"
+        smallint ano
+        tinyint mes
+        decimal indice
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    REGRAS_REAJUSTE {
+        bigint id PK
+        bigint condominio_id FK
+        enum tipo_indice "serie do indice (ipca, igpm, ...), nao FK para linha mensal"
+        int periodicidade_meses
+        date data_base
+        timestamp created_at
+        timestamp updated_at
+        timestamp deleted_at
+    }
+
+    CONFIGURACOES {
+        bigint id PK
+        bigint condominio_id FK "UK composta (condominio_id, chave)"
+        string chave
+        text valor
+        string tipo_dado
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    USERS {
+        bigint id PK
+        bigint pessoa_id FK "nullable"
+        string name UK "campo de login (BR-HUMANA-001)"
+        string email UK
+        string password
+        enum papel
+        string foto_perfil
+        timestamp email_verified_at
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    CONDOMINIO_USER {
+        bigint id PK
+        bigint condominio_id FK "UK composta (condominio_id, user_id)"
+        bigint user_id FK
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    AUDITS {
+        bigint id PK
+        string user_type "schema do pacote owen-it/laravel-auditing"
+        bigint user_id FK
+        string event
+        string auditable_type
+        bigint auditable_id
+        json old_values
+        json new_values
+        string url
+        string ip_address
+        string user_agent
+        string tags
+        timestamp created_at
+        timestamp updated_at
+    }
