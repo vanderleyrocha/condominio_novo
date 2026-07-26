@@ -205,21 +205,39 @@ ETL final + validação profunda + remap de 16 users level_one → sindico, tudo
       o descomissionamento (Fase 5).
 - [ ] Manter backup do banco antigo por 90 dias.
 
-## Fase 5 — Descomissionamento
+## Fase 5 — Descomissionamento — ✅ CONCLUÍDA no código (2026-07)
 
-- [ ] Após estabilização (2-4 semanas), remover tabelas antigas
-      (migration de drop) e a `migration_id_map`.
-- [ ] Remover código morto: Models/Actions/Policies/telas antigas
-      (Proprietario, Imovel, Mensalidade, Pagamento antigo, Receita, Despesa,
-      DespesaTipo, Ipca, Parametro, CobrancaExtra), rotas do bloco
-      "Schema antigo", `migrar:legado` e os commands `migrar:*`.
-- [ ] Renomear os artefatos transitórios: tabela `pagamentos_novo` →
-      `pagamentos` (feito no cutover), classe `PagamentoNovo` → `Pagamento`,
-      namespaces/rotas `pagamentos-novo` → `pagamentos`, `resumo-novo` →
-      `resumo`, `painel-novo` → rota `/`, `pdf-novo.*` → `pdf.*`,
-      `PdfNovoController` → `PdfController`, `ResumoFinanceiroNovo` →
-      `ResumoFinanceiro`, `CorrecaoMonetariaNovaService` →
-      `CorrecaoMonetariaService`, e remover o case deprecated
-      `PapelUsuario::LevelOne`.
-- [ ] Regravar os golden files contra as telas/PDFs novos (critério de aceite
-      já validado por paridade de agregados na Fase 4).
+Antecipada por decisão do cliente (2026-07): a aplicação antiga segue rodando
+no servidor remoto como rede de segurança, então a estabilização não depende
+das telas antigas locais.
+
+- [x] `migrar:descomissionar` (comando, NÃO migration — nunca roda num
+      `php artisan migrate` antes do ETL): dropa as 13 tabelas antigas +
+      `migration_id_map` e renomeia `pagamentos_novo` → `pagamentos`.
+      Guardas: schema novo populado + remap de papéis executado + confirmação
+      (ou `--forcar`). Executado no banco local com sucesso.
+- [x] Código morto removido: 11 Models antigos, 13 Actions, 7 Policies,
+      12 grupos de telas Livewire + views, PdfController antigo,
+      ResumoFinanceiro/CorrecaoMonetariaService/ParametrosCondominio antigos,
+      `migrar:legado`, enums StatusMensalidade/ResponsavelPagamento e o case
+      `PapelUsuario::LevelOne` (default de users.papel agora é 'sindico').
+- [x] Transitórios renomeados para os nomes definitivos: `Pagamento` (Model,
+      Policy, Factory, Actions Registrar/EstornarPagamento), rotas/telas
+      `pagamentos`, `resumo`, `pdf.*`, `PdfController`, `ResumoFinanceiro`,
+      `CorrecaoMonetariaService`, `PainelInicial` na rota `/`.
+- [x] `golden:gerar` portado para o schema novo (mesmos ids — ETL preserva);
+      teste de correção monetária portado para `indices_economicos`.
+- [ ] APÓS o cutover de produção: remover os commands `migrar:*` do ETL, as
+      migrations do schema antigo e os testes de remodelagem (limpeza final).
+
+## Runbook do cutover em PRODUÇÃO (janela única)
+
+1. Backup completo do banco + `php artisan down`.
+2. Deploy desta versão.
+3. `php artisan migrate` (cria o schema novo em paralelo).
+4. `php artisan migrar:cutover` (ETL final + validação profunda + remap de
+   papéis — aborta sem efeitos se algo divergir).
+5. `php artisan migrar:descomissionar` (drop do schema antigo + rename).
+6. Smoke test e `php artisan up`.
+7. Rollback (antes do passo 5): `migrar:remapear-papeis --reverter` + deploy
+   anterior. Após o passo 5: restaurar o backup do passo 1.

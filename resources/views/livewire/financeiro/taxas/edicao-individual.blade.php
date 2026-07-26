@@ -66,7 +66,7 @@
                     <span wire:loading>Salvando...</span>
                 </button>
                 @if ((float) $valorPago > 0)
-                    <a href="{{ route('pdf-novo.taxas.recibo', $taxa) }}" target="_blank" class="btn btn-secondary">
+                    <a href="{{ route('pdf.taxas.recibo', $taxa) }}" target="_blank" class="btn btn-secondary">
                         Recibo
                     </a>
                 @endif

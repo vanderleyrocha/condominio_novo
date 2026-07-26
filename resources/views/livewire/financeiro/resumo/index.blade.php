@@ -5,8 +5,7 @@
             <div class="flex flex-wrap items-end gap-4">
                 <div>
                     <label class="label">Apartir de</label>
-                    <input type="date" wire:model.live="apartirDe"
-                           class="input">
+                    <input type="date" wire:model.live="apartirDe" class="input">
                 </div>
                 <a href="{{ route('pdf.resumo', array_filter(['apartir_de' => $apartirDe])) }}" target="_blank"
                    class="btn btn-primary">Download</a>
@@ -18,12 +17,12 @@
                 <thead>
                     <tr>
                         <th rowspan="2" class="text-left">Ano</th>
-                        <th colspan="{{ count($imoveis) + 2 }}" class="text-center">Receitas</th>
+                        <th colspan="{{ count($unidades) + 2 }}" class="text-center">Receitas</th>
                         <th rowspan="2" class="text-right">Despesas</th>
                     </tr>
                     <tr>
-                        @foreach ($imoveis as $imovel)
-                            <th class="text-right">{{ $imovel }}</th>
+                        @foreach ($unidades as $unidade)
+                            <th class="text-right">{{ $unidade }}</th>
                         @endforeach
                         <th class="text-right">Outras</th>
                         <th class="text-right">Total</th>
@@ -32,13 +31,13 @@
                 <tbody>
                     @forelse ($resumo as $ano => $dados)
                         @php $totalAno = 0; @endphp
-                        <tr>
+                        <tr wire:key="resumo-{{ $ano }}">
                             <th class="text-left">{{ $ano }}</th>
-                            @foreach ($imoveis as $imovel)
+                            @foreach ($unidades as $unidade)
                                 <td class="text-right">
-                                    {{ (isset($dados[$imovel]) && $dados[$imovel] > 0) ? \App\Support\DinheiroBr::formatar($dados[$imovel]) : '-' }}
+                                    {{ (isset($dados[$unidade]) && $dados[$unidade] > 0) ? \App\Support\DinheiroBr::formatar($dados[$unidade]) : '-' }}
                                 </td>
-                                @php $totalAno += $dados[$imovel] ?? 0; @endphp
+                                @php $totalAno += $dados[$unidade] ?? 0; @endphp
                             @endforeach
                             <td class="text-right">
                                 {{ (isset($dados['receita']) && $dados['receita'] > 0) ? \App\Support\DinheiroBr::formatar($dados['receita']) : '-' }}
@@ -55,9 +54,9 @@
                 <tfoot>
                     <tr class="font-semibold">
                         <th class="text-left">Total</th>
-                        @foreach ($imoveis as $imovel)
+                        @foreach ($unidades as $unidade)
                             <th class="text-right">
-                                {{ (isset($totalImovel[$imovel]) && $totalImovel[$imovel] > 0) ? \App\Support\DinheiroBr::formatar($totalImovel[$imovel]) : '-' }}
+                                {{ (isset($totalUnidade[$unidade]) && $totalUnidade[$unidade] > 0) ? \App\Support\DinheiroBr::formatar($totalUnidade[$unidade]) : '-' }}
                             </th>
                         @endforeach
                         <th class="text-right">{{ \App\Support\DinheiroBr::formatar($totalReceita) }}</th>
@@ -83,12 +82,12 @@
 
     @if ($cobrancas->isNotEmpty())
         <div class="card">
-            <h3 class="mb-4 text-base font-semibold text-slate-900">Cobranças extras apuradas</h3>
+            <h3 class="mb-4 text-base font-semibold text-slate-900">Cobranças extraordinárias apuradas</h3>
             <table class="table-modern">
                 <thead>
                     <tr>
                         <th>Cobrança</th>
-                        <th class="text-right">Apurado em mensalidades</th>
+                        <th class="text-right">Apurado em taxas</th>
                         <th class="text-right">Receitas vinculadas</th>
                         <th class="text-right">Total apurado</th>
                     </tr>
@@ -96,10 +95,10 @@
                 <tbody>
                     @foreach ($cobrancas as $cobranca)
                         @php
-                            $pivots = (float) ($cobranca->total_mensalidades ?? 0);
-                            $vinculadas = (float) ($cobranca->total_receitas ?? 0);
+                            $pivots = (float) ($cobranca->total_taxas ?? 0);
+                            $vinculadas = (float) ($receitasPorCobranca[$cobranca->id] ?? 0);
                         @endphp
-                        <tr>
+                        <tr wire:key="resumo-cobranca-{{ $cobranca->id }}">
                             <td>{{ $cobranca->nome }}</td>
                             <td class="text-right">{{ \App\Support\DinheiroBr::formatar($pivots) }}</td>
                             <td class="text-right">{{ \App\Support\DinheiroBr::formatar($vinculadas) }}</td>

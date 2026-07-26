@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Console\Commands\Remodelagem;
 
-use App\Support\ParametrosCondominio;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -29,7 +28,9 @@ class MigrarCondominios extends ComandoRemodelagem
 
     protected function executar(): int
     {
-        $nome = ParametrosCondominio::nomeCondominio();
+        // Direto da tabela legada (a classe ParametrosCondominio foi removida na Fase 5)
+        $nome = DB::table('parametros')->where('chave', 'nome_condominio')->value('valor')
+            ?? 'Condomínio Space';
 
         DB::table('condominios')->insert([
             'nome' => $nome,

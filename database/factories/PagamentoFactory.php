@@ -5,17 +5,17 @@ declare(strict_types=1);
 namespace Database\Factories;
 
 use App\Enums\FormaPagamento;
-use App\Models\PagamentoNovo;
+use App\Models\Pagamento;
 use App\Models\Pessoa;
 use App\Models\Unidade;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends Factory<PagamentoNovo>
+ * @extends Factory<Pagamento>
  */
-class PagamentoNovoFactory extends Factory
+class PagamentoFactory extends Factory
 {
-    protected $model = PagamentoNovo::class;
+    protected $model = Pagamento::class;
 
     public function definition(): array
     {
@@ -33,7 +33,7 @@ class PagamentoNovoFactory extends Factory
     /**
      * Estorno do pagamento dado — valor negativo (convenção do legado).
      */
-    public function estornoDe(PagamentoNovo $original): static
+    public function estornoDe(Pagamento $original): static
     {
         return $this->state(fn () => [
             'unidade_id' => $original->unidade_id,

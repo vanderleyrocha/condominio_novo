@@ -8,9 +8,8 @@ use App\Models\Unidade;
 use App\Models\User;
 
 /**
- * Controle de acesso novo (03-modelo-dados.md): admin e sindico gerenciam
- * unidades e vínculos; proprietario não. LevelOne aceito transitoriamente
- * até o remap do cutover.
+ * Controle de acesso (03-modelo-dados.md): admin e sindico gerenciam
+ * unidades e vínculos; proprietario não.
  */
 class UnidadePolicy
 {
@@ -36,6 +35,6 @@ class UnidadePolicy
 
     private function podeGerir(User $user): bool
     {
-        return $user->isAdmin() || $user->isSindico() || $user->isLevelOne();
+        return $user->isAdmin() || $user->isSindico();
     }
 }

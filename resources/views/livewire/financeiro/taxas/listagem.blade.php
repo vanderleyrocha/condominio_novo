@@ -80,7 +80,7 @@
                                                class="table-action">Editar</a>
                                         @endcan
                                         @if ((float) ($taxa->valor_pago ?? 0) > 0)
-                                            <a href="{{ route('pdf-novo.taxas.recibo', $taxa) }}" target="_blank" title="Ver recibo"
+                                            <a href="{{ route('pdf.taxas.recibo', $taxa) }}" target="_blank" title="Ver recibo"
                                                class="table-action-muted">Recibo</a>
                                         @endif
                                     </div>

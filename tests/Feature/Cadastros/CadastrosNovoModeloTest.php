@@ -13,7 +13,7 @@ use App\Actions\Cadastros\VincularPessoa;
 use App\Enums\PapelUsuario;
 use App\Enums\PapelVinculo;
 use App\Models\Condominio;
-use App\Models\PagamentoNovo;
+use App\Models\Pagamento;
 use App\Models\Pessoa;
 use App\Models\TaxaCondominial;
 use App\Models\Unidade;
@@ -38,7 +38,7 @@ it('bloqueia exclusão de pessoa com vínculo, pagamento ou conta', function () 
         ->toThrow(DomainException::class, 'vínculos com unidades');
 
     $pagadora = Pessoa::factory()->create();
-    PagamentoNovo::factory()->create(['pessoa_id' => $pagadora->id]);
+    Pagamento::factory()->create(['pessoa_id' => $pagadora->id]);
     expect(fn () => app(ExcluirPessoa::class)->executar($pagadora))
         ->toThrow(DomainException::class, 'pagamentos registrados');
 

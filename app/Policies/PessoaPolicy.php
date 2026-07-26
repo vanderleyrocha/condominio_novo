@@ -8,10 +8,8 @@ use App\Models\Pessoa;
 use App\Models\User;
 
 /**
- * Controle de acesso novo (03-modelo-dados.md): admin e sindico gerenciam
- * cadastros; proprietario não. LevelOne é aceito transitoriamente até o remap
- * do cutover (level_one → sindico) — comportamento igual ao legado, onde o
- * CRUD de proprietários era aberto a autenticados.
+ * Controle de acesso (03-modelo-dados.md): admin e sindico gerenciam
+ * cadastros; proprietario não.
  */
 class PessoaPolicy
 {
@@ -32,6 +30,6 @@ class PessoaPolicy
 
     private function podeGerir(User $user): bool
     {
-        return $user->isAdmin() || $user->isSindico() || $user->isLevelOne();
+        return $user->isAdmin() || $user->isSindico();
     }
 }

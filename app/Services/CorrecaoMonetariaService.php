@@ -5,36 +5,37 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Enums\MetodoCorrecao;
-use App\Models\Ipca;
-use App\Support\ParametrosCondominio;
+use App\Enums\TipoIndiceEconomico;
+use App\Models\IndiceEconomico;
+use App\Support\ConfiguracoesCondominio;
 use Carbon\CarbonInterface;
 use Illuminate\Support\Collection;
 
 /**
- * Correção monetária pelo IPCA (BR-MIGRAR-008).
- *
- * Paridade com o legado (RN-21/RN-22): período com AMBAS as extremidades
- * inclusivas (mês do vencimento e mês da data-base) e, no método soma simples,
- * fórmula exata round(valor * (1 + soma_indices/100), 2).
- * O método composto é a alternativa configurável decidida em P7.
+ * Correção monetária no modelo novo (substitui CorrecaoMonetariaService no
+ * cutover): lê indices_economicos (série configurável, IPCA por padrão) e
+ * configuracoes. A MATEMÁTICA é idêntica ao serviço do legado — extremidades
+ * inclusivas (RN-21/RN-22), soma dos índices via BCMath e
+ * round(valor * (1 + soma/100), 2) — paridade golden files.
  */
 class CorrecaoMonetariaService
 {
-    public function corrigirMensalidade(
+    public function corrigirTaxa(
         float $valorLiquido,
         CarbonInterface $vencimento,
         ?CarbonInterface $dataBase = null,
         ?MetodoCorrecao $metodo = null,
+        TipoIndiceEconomico $tipoIndice = TipoIndiceEconomico::Ipca,
     ): float {
         $dataBase ??= now();
-        $metodo ??= ParametrosCondominio::metodoCorrecao();
+        $metodo ??= ConfiguracoesCondominio::metodoCorrecao();
 
         // Guarda de não-correção: vencimento não anterior à data-base
         if ($vencimento->greaterThanOrEqualTo($dataBase)) {
             return $valorLiquido;
         }
 
-        $indices = $this->indicesDoPeriodo($vencimento, $dataBase);
+        $indices = $this->indicesDoPeriodo($tipoIndice, $vencimento, $dataBase);
 
         return $this->aplicar($valorLiquido, $indices, $metodo);
     }
@@ -47,9 +48,10 @@ class CorrecaoMonetariaService
         CarbonInterface $vencimento,
         ?CarbonInterface $dataBase = null,
         ?MetodoCorrecao $metodo = null,
+        TipoIndiceEconomico $tipoIndice = TipoIndiceEconomico::Ipca,
     ): array {
         $dataBase ??= now();
-        $metodo ??= ParametrosCondominio::metodoCorrecao();
+        $metodo ??= ConfiguracoesCondominio::metodoCorrecao();
 
         if ($vencimento->greaterThanOrEqualTo($dataBase)) {
             return [
@@ -62,7 +64,7 @@ class CorrecaoMonetariaService
             ];
         }
 
-        $indices = $this->indicesDoPeriodo($vencimento, $dataBase);
+        $indices = $this->indicesDoPeriodo($tipoIndice, $vencimento, $dataBase);
 
         return [
             'valor_original' => $valorLiquido,
@@ -77,9 +79,7 @@ class CorrecaoMonetariaService
     private function aplicar(float $valorLiquido, Collection $indices, MetodoCorrecao $metodo): float
     {
         if ($metodo === MetodoCorrecao::SomaSimples) {
-            // Paridade de arredondamento com o legado: a soma dos índices é feita
-            // pelo banco (aritmética DECIMAL exata via SUM), não em floats no PHP —
-            // evita flips de centavo em fronteiras de round() (comparação golden 2026-07-16)
+            // Paridade de arredondamento: soma via BCMath, nunca floats parciais
             $acumulado = (float) $indices->reduce(
                 fn (string $carry, $i): string => bcadd($carry, (string) $i->indice, 4),
                 '0',
@@ -97,10 +97,14 @@ class CorrecaoMonetariaService
         return round($valorLiquido * $fator, 2);
     }
 
-    private function indicesDoPeriodo(CarbonInterface $vencimento, CarbonInterface $dataBase): Collection
-    {
+    private function indicesDoPeriodo(
+        TipoIndiceEconomico $tipoIndice,
+        CarbonInterface $vencimento,
+        CarbonInterface $dataBase,
+    ): Collection {
         // Consulta idêntica à do legado: extremidades inclusivas (RN-22)
-        return Ipca::query()
+        return IndiceEconomico::query()
+            ->where('tipo', $tipoIndice->value)
             ->where(function ($q) use ($vencimento) {
                 $q->where('ano', '>', $vencimento->year)
                     ->orWhere(function ($q) use ($vencimento) {

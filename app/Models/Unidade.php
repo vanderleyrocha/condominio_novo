@@ -65,7 +65,7 @@ class Unidade extends Model implements Auditable
 
     public function pagamentos(): HasMany
     {
-        return $this->hasMany(PagamentoNovo::class);
+        return $this->hasMany(Pagamento::class);
     }
 
     public function lancamentosFinanceiros(): HasMany

@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Livewire\Financeiro\Inadimplencia;
 
 use App\Models\TaxaCondominial;
-use App\Services\CorrecaoMonetariaNovaService;
+use App\Services\CorrecaoMonetariaService;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
@@ -17,7 +17,7 @@ use Livewire\Component;
 #[Layout('layouts.app')]
 class Listagem extends Component
 {
-    public function render(CorrecaoMonetariaNovaService $correcao)
+    public function render(CorrecaoMonetariaService $correcao)
     {
         $taxas = TaxaCondominial::query()
             ->with('unidade')

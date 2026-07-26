@@ -1,6 +1,5 @@
-{{-- Paridade de conteúdo: resources/views/pagamentos/recibo.blade.php (legado).
-     DEV-10: typo "CONDOMÍNIO - BLORO R4" corrigido via parâmetro nome_condominio.
-     DEV-11: assinatura parametrizada. --}}
+{{-- Modelo novo (Fase 4): recibo de pagamento sobre pagamentos_novo/taxas.
+     Mesmo conteúdo do pdf/recibo-pagamento.blade.php, lendo ConfiguracoesCondominio. --}}
 @extends('pdf.layout')
 
 @section('title', 'Recibo de Pagamento')
@@ -74,7 +73,7 @@
 
 @section('content')
     <div class="header">
-        <h1 class="text-center">{{ mb_strtoupper(\App\Support\ParametrosCondominio::nomeCondominio()) }}</h1>
+        <h1 class="text-center">{{ mb_strtoupper(\App\Support\ConfiguracoesCondominio::nomeCondominio()) }}</h1>
         <h2>RECIBO DE PAGAMENTO</h2>
         <p>Nº {{ $pagamento->id }}</p>
     </div>
@@ -83,7 +82,7 @@
     <div class="box">
         <div class="row">
             <span class="label">Data:</span>
-            {{ $pagamento->data->format('d/m/Y') }}
+            {{ $pagamento->data_pagamento->format('d/m/Y') }}
         </div>
 
         <div class="row">
@@ -93,26 +92,31 @@
 
         <div class="row">
             <span class="label">Valor Total:</span>
-            R$ {{ \App\Support\DinheiroBr::formatar($pagamento->valor) }}
-        </div>
-    </div>
-
-    {{-- Proprietário / Imóvel --}}
-    <div class="box">
-        <div class="row">
-            <span class="label">Proprietário:</span>
-            {{ $pagamento->proprietario->nome }}
+            R$ {{ \App\Support\DinheiroBr::formatar($pagamento->valor_total) }}
         </div>
 
         <div class="row">
-            <span class="label">Imóvel:</span>
-            {{ $pagamento->imovel->nome }}
+            <span class="label">Forma de pagamento:</span>
+            {{ $pagamento->forma_pagamento->rotulo() }}
         </div>
     </div>
 
-    {{-- Mensalidades --}}
+    {{-- Pagador / Unidade --}}
     <div class="box">
-        <span class="label">Mensalidades Quitadas</span>
+        <div class="row">
+            <span class="label">Pagador:</span>
+            {{ $pagamento->pessoa->nome }}
+        </div>
+
+        <div class="row">
+            <span class="label">Unidade:</span>
+            {{ $pagamento->unidade->identificacao ?? '-' }}
+        </div>
+    </div>
+
+    {{-- Taxas --}}
+    <div class="box">
+        <span class="label">Taxas Quitadas</span>
 
         <table>
             <thead>
@@ -125,13 +129,13 @@
             </thead>
 
             <tbody>
-                @foreach($pagamento->mensalidades as $mensalidade)
+                @foreach($pagamento->taxasCondominiais as $taxa)
                     <tr>
-                        <td class="text-center">{{ $mensalidade->ano }}</td>
-                        <td class="text-center">{{ $mensalidade->mes }}</td>
-                        <td class="text-center">{{ $mensalidade->vencimento->format('d/m/Y') }}</td>
+                        <td class="text-center">{{ $taxa->competencia_ano }}</td>
+                        <td class="text-center">{{ $taxa->competencia_mes }}</td>
+                        <td class="text-center">{{ $taxa->vencimento->format('d/m/Y') }}</td>
                         <td class="text-right">
-                            {{ \App\Support\DinheiroBr::formatar($mensalidade->pivot->valor) }}
+                            {{ \App\Support\DinheiroBr::formatar($taxa->pivot->valor_aplicado) }}
                         </td>
                     </tr>
                 @endforeach
@@ -143,7 +147,7 @@
                         Total Aplicado
                     </th>
                     <th class="text-right">
-                        R$ {{ \App\Support\DinheiroBr::formatar($pagamento->mensalidades->sum('pivot.valor')) }}
+                        R$ {{ \App\Support\DinheiroBr::formatar($pagamento->taxasCondominiais->sum('pivot.valor_aplicado')) }}
                     </th>
                 </tr>
             </tfoot>
@@ -158,12 +162,12 @@
     <br><br><br><br><br><br>
     <div id="assinatura" class="text-center">
         @php
-            $assinaturaImagem = public_path(\App\Support\ParametrosCondominio::get('assinatura_imagem', 'assets/img/Ass Doneska2.png'));
+            $assinaturaImagem = public_path(\App\Support\ConfiguracoesCondominio::get('assinatura_imagem', 'assets/img/Ass Doneska2.png'));
         @endphp
         @if (file_exists($assinaturaImagem))
             <img src="{{ $assinaturaImagem }}" alt="Assinatura">
         @endif
-        <p class="text-center">{{ \App\Support\ParametrosCondominio::assinaturaRecibo() }}</p>
-        <p class="text-center">{{ \App\Support\ParametrosCondominio::get('assinatura_cargo', 'Responsável pela arrecadação das contribuições dos moradores') }}</p>
+        <p class="text-center">{{ \App\Support\ConfiguracoesCondominio::assinaturaRecibo() }}</p>
+        <p class="text-center">{{ \App\Support\ConfiguracoesCondominio::get('assinatura_cargo', 'Responsável pela arrecadação das contribuições dos moradores') }}</p>
     </div>
 @endsection

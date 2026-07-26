@@ -7,26 +7,25 @@ namespace App\Policies;
 use App\Models\Pagamento;
 use App\Models\User;
 
+/**
+ * Pagamentos no modelo novo: admin/sindico registram (level_one aceito até o
+ * remap do cutover); estorno segue restrito a admin (BR-HUMANA-004); recibo
+ * bloqueado para pagamento estornado ou registro de estorno (BR-HUMANA-006).
+ */
 class PagamentoPolicy
 {
     public function create(User $user): bool
     {
-        return true; // paridade: rota autenticada sem gate no legado
+        return $user->isAdmin() || $user->isSindico();
     }
 
-    /**
-     * Estorno restrito a admin (decisão BR-HUMANA-004).
-     */
     public function estornar(User $user, Pagamento $pagamento): bool
     {
         return $user->isAdmin();
     }
 
-    /**
-     * Recibo bloqueado para pagamento estornado (BR-HUMANA-006 / DA-09).
-     */
     public function emitirRecibo(User $user, Pagamento $pagamento): bool
     {
-        return ! $pagamento->estornado && ! $pagamento->isEstorno();
+        return ! $pagamento->estornos()->exists() && ! $pagamento->isEstorno();
     }
 }

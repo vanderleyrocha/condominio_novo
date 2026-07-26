@@ -1,6 +1,5 @@
-{{-- Paridade de conteúdo: resources/views/resumo_intervalo_print.blade.php (legado).
-     DEV-11: nome do condomínio e URL parametrizados.
-     DEV-12: reserva (poupança + juros) apurada por cobranças extras; texto default literal. --}}
+{{-- Modelo novo (Fase 4): resumo por intervalo via pagamento_taxa + lançamentos.
+     Mesmo conteúdo do pdf/resumo-intervalo.blade.php (EX-04/DEV-12 mantidos). --}}
 @extends('pdf.layout')
 
 @section('title', 'Receitas e despesas')
@@ -110,7 +109,7 @@
 
 @section('content')
     <div class="header">
-        <h1>{{ \App\Support\ParametrosCondominio::nomeCondominio() }}</h1>
+        <h1>{{ \App\Support\ConfiguracoesCondominio::nomeCondominio() }}</h1>
         <h2>{{ __('Resumo Financeiro') }}</h2>
         <p class="periodo">
             {{ __('Período: ' . date('d/m/Y', strtotime($de)) . ' a ' . date('d/m/Y', strtotime($ate))) }}</p>
@@ -140,22 +139,22 @@
                 </tr>
             </thead>
             <tbody>
-                @forelse ($mensalidades as $mensalidade)
+                @forelse ($aplicacoes as $aplicacao)
                     <tr>
-                        <td>{{ $mensalidade->pago_em->format('d/m/Y') }}</td>
-                        <td>{{ 'Apartamento ' . $mensalidade->imovel->nome . " - Mensalidade " . str_pad((string) $mensalidade->mes, 2, "0", STR_PAD_LEFT) . "/" . $mensalidade->ano }}</td>
-                        <td class="text-right">{{ \App\Support\DinheiroBr::formatar($mensalidade->valor_pago) }}</td>
+                        <td>{{ \Carbon\Carbon::parse($aplicacao->data_pagamento)->format('d/m/Y') }}</td>
+                        <td>{{ 'Unidade ' . $aplicacao->identificacao . " - Taxa " . str_pad((string) $aplicacao->competencia_mes, 2, "0", STR_PAD_LEFT) . "/" . $aplicacao->competencia_ano }}</td>
+                        <td class="text-right">{{ \App\Support\DinheiroBr::formatar($aplicacao->valor_aplicado) }}</td>
                     </tr>
-                    @php $total_receita += $mensalidade->valor_pago; @endphp
+                    @php $total_receita += $aplicacao->valor_aplicado; @endphp
                 @empty
                     <tr>
-                        <td colspan="3" class="text-center">Nenhuma mensalidade registrada</td>
+                        <td colspan="3" class="text-center">Nenhum pagamento de taxa registrado</td>
                     </tr>
                 @endforelse
 
                 @forelse ($receitas as $receita)
                     <tr>
-                        <td>{{ $receita->data->format('d/m/Y') }}</td>
+                        <td>{{ $receita->data_lancamento->format('d/m/Y') }}</td>
                         <td>{{ ucfirst($receita->descricao) }}</td>
                         <td class="text-right">{{ \App\Support\DinheiroBr::formatar($receita->valor) }}</td>
                     </tr>
@@ -192,7 +191,7 @@
                 @endphp
                 @forelse ($despesas as $despesa)
                     <tr>
-                        <td>{{ $despesa->data->format('d/m/Y') }}</td>
+                        <td>{{ $despesa->data_lancamento->format('d/m/Y') }}</td>
                         <td>{{ ucfirst($despesa->descricao) }}</td>
                         <td class="text-right">{{ \App\Support\DinheiroBr::formatar($despesa->valor) }}</td>
                     </tr>
@@ -234,7 +233,7 @@
             {{ __(
                 'Do saldo de R$' . \App\Support\DinheiroBr::formatar($saldo + $total_receita - $total_despesa)
                 . ', ' . \App\Support\DinheiroBr::formatar($poupanca + $juros_poupanca)
-                . ' são reservados para ' . \App\Support\ParametrosCondominio::get('finalidade_reserva', 'pintura do prédio') . '. '
+                . ' são reservados para ' . \App\Support\ConfiguracoesCondominio::get('finalidade_reserva', 'pintura do prédio') . '. '
                 . 'Restando disponível em caixa, o valor de R$ '
                 . \App\Support\DinheiroBr::formatar($saldo + $total_receita - $total_despesa - $poupanca - $juros_poupanca),
             ) }}
@@ -242,6 +241,6 @@
     </div>
 
     <div style="text-align: center; margin-top: 30px; font-size: 10px; color: #777;">
-        Relatório gerado em {{ date('d/m/Y H:i') }} - {{ \App\Support\ParametrosCondominio::get('url_sistema', 'http://r4.condominio.space/') }}
+        Relatório gerado em {{ date('d/m/Y H:i') }} - {{ \App\Support\ConfiguracoesCondominio::get('url_sistema', 'http://r4.condominio.space/') }}
     </div>
 @endsection

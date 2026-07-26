@@ -1,9 +1,9 @@
 <div>
     <div class="mb-8 text-center">
         <span class="mx-auto mb-4 flex size-12 items-center justify-center rounded-xl bg-brand text-lg font-bold text-white" aria-hidden="true">
-            {{ mb_strtoupper(mb_substr(\App\Support\ParametrosCondominio::nomeCondominio(), 0, 1)) }}
+            {{ mb_strtoupper(mb_substr(\App\Support\ConfiguracoesCondominio::nomeCondominio(), 0, 1)) }}
         </span>
-        <h1 class="text-xl font-semibold tracking-tight text-slate-900">{{ \App\Support\ParametrosCondominio::nomeCondominio() }}</h1>
+        <h1 class="text-xl font-semibold tracking-tight text-slate-900">{{ \App\Support\ConfiguracoesCondominio::nomeCondominio() }}</h1>
         <p class="mt-1 text-sm text-slate-500">Acesso ao sistema</p>
     </div>
 

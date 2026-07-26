@@ -4,17 +4,15 @@ declare(strict_types=1);
 
 namespace App\Livewire\Financeiro\Resumo;
 
-use App\Models\Despesa;
-use App\Models\Mensalidade;
-use App\Models\Receita;
+use App\Models\LancamentoFinanceiro;
 use App\Support\ResumoFinanceiro;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Url;
 use Livewire\Component;
 
 /**
- * Resumo por intervalo — mensalidades pagas no período + receitas + despesas
- * e saldo, com defaults no primeiro/último dia do mês corrente.
+ * Resumo por intervalo no modelo novo — pagamentos aplicados em taxas
+ * contabilizadas no período + lançamentos, com saldo anterior.
  */
 #[Layout('layouts.app')]
 class Intervalo extends Component
@@ -40,30 +38,39 @@ class Intervalo extends Component
     {
         $saldo = ResumoFinanceiro::saldoAnterior($this->de);
 
-        $mensalidades = Mensalidade::query()
-            ->with('imovel.proprietario')
-            ->where('contabilizado', true)
-            ->whereNotNull('pago_em')
-            ->whereBetween('pago_em', [$this->de, $this->ate])
-            ->orderBy('pago_em')
+        $aplicacoes = ResumoFinanceiro::aplicacoesContabilizadas()
+            ->join('unidades', 'unidades.id', '=', 'taxas_condominiais.unidade_id')
+            ->whereBetween('pagamentos_novo.data_pagamento', [$this->de, $this->ate])
+            ->select([
+                'pagamento_taxa.valor_aplicado',
+                'pagamentos_novo.data_pagamento',
+                'pagamentos_novo.descricao as pagamento_descricao',
+                'unidades.identificacao',
+                'taxas_condominiais.competencia_mes',
+                'taxas_condominiais.competencia_ano',
+            ])
+            ->orderBy('pagamentos_novo.data_pagamento')
             ->get();
 
-        $receitas = Receita::query()
-            ->whereBetween('data', [$this->de, $this->ate])
-            ->orderBy('data')
+        $receitas = LancamentoFinanceiro::query()
+            ->where('natureza', 'receita')
+            ->whereBetween('data_lancamento', [$this->de, $this->ate])
+            ->orderBy('data_lancamento')
             ->get();
 
-        $despesas = Despesa::query()
-            ->whereBetween('data', [$this->de, $this->ate])
-            ->orderBy('data')
+        $despesas = LancamentoFinanceiro::query()
+            ->with('planoConta')
+            ->where('natureza', 'despesa')
+            ->whereBetween('data_lancamento', [$this->de, $this->ate])
+            ->orderBy('data_lancamento')
             ->get();
 
-        $totalReceita = (float) $mensalidades->sum('valor_pago') + (float) $receitas->sum('valor');
+        $totalReceita = (float) $aplicacoes->sum('valor_aplicado') + (float) $receitas->sum('valor');
         $totalDespesa = (float) $despesas->sum('valor');
 
         return view('livewire.financeiro.resumo.intervalo', [
             'saldo' => $saldo,
-            'mensalidades' => $mensalidades,
+            'aplicacoes' => $aplicacoes,
             'receitas' => $receitas,
             'despesas' => $despesas,
             'totalReceita' => $totalReceita,

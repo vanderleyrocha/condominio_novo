@@ -10,7 +10,7 @@ use Livewire\Component;
 use Livewire\WithPagination;
 
 /**
- * Listagem de pagamentos (tela pagamentos.listagem): data DESC com paginação.
+ * Listagem de pagamentos no modelo novo: data DESC com paginação.
  */
 #[Layout('layouts.app')]
 class Listagem extends Component
@@ -20,8 +20,8 @@ class Listagem extends Component
     public function render()
     {
         $pagamentos = Pagamento::query()
-            ->with(['proprietario', 'imovel'])
-            ->orderByDesc('data')
+            ->with(['pessoa', 'unidade', 'estornos'])
+            ->orderByDesc('data_pagamento')
             ->orderByDesc('id')
             ->paginate(20);
 

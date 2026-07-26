@@ -49,7 +49,7 @@ class TaxaCondominial extends Model implements Auditable
 
     public function pagamentos(): BelongsToMany
     {
-        return $this->belongsToMany(PagamentoNovo::class, 'pagamento_taxa', 'taxa_condominial_id', 'pagamento_id')
+        return $this->belongsToMany(Pagamento::class, 'pagamento_taxa', 'taxa_condominial_id', 'pagamento_id')
             ->withPivot('valor_aplicado')
             ->withTimestamps();
     }

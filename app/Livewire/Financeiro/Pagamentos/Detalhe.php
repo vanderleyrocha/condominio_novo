@@ -9,8 +9,8 @@ use Livewire\Attributes\Layout;
 use Livewire\Component;
 
 /**
- * Detalhe do pagamento (tela pagamentos.detalhe).
- * DEV-09: botão de recibo só via Policy emitirRecibo (oculto quando estornado).
+ * Detalhe do pagamento no modelo novo. Recibo só via Policy emitirRecibo
+ * (oculto quando estornado — DEV-09/BR-HUMANA-006).
  */
 #[Layout('layouts.app')]
 class Detalhe extends Component
@@ -20,11 +20,11 @@ class Detalhe extends Component
     public function mount(Pagamento $pagamento): void
     {
         $pagamento->load([
-            'proprietario',
-            'imovel',
-            'mensalidades',
+            'pessoa',
+            'unidade',
+            'taxasCondominiais',
             'estornos',
-            'pagamentoOrigem',
+            'estornoDe',
         ]);
 
         $this->pagamento = $pagamento;
@@ -33,7 +33,7 @@ class Detalhe extends Component
     public function render()
     {
         return view('livewire.financeiro.pagamentos.detalhe', [
-            'totalAplicado' => $this->pagamento->mensalidades->sum(fn ($m) => (float) $m->pivot->valor),
+            'totalAplicado' => $this->pagamento->taxasCondominiais->sum(fn ($t) => (float) $t->pivot->valor_aplicado),
         ]);
     }
 }

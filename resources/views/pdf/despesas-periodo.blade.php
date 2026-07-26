@@ -1,4 +1,5 @@
-{{-- Paridade de conteúdo: resources/views/despesas/print.blade.php (legado) --}}
+{{-- Modelo novo (Fase 4): despesas via lancamentos_financeiros + planos_contas.
+     Mesmo conteúdo do pdf/despesas-periodo.blade.php. --}}
 @extends('pdf.layout')
 
 @section('title', $title)
@@ -33,7 +34,7 @@
             <tr>
                 <th class="text-left">Data</th>
                 <th class="text-left">Descrição</th>
-                <th class="text-left">Tipo</th>
+                <th class="text-left">Plano de contas</th>
                 <th class="text-right">Valor</th>
             </tr>
         </thead>
@@ -43,9 +44,9 @@
         <tbody>
             @forelse($despesas as $despesa)
                 <tr>
-                    <td class="text-left">{{ $despesa->data->format('d/m/Y') }}</td>
+                    <td class="text-left">{{ $despesa->data_lancamento->format('d/m/Y') }}</td>
                     <td class="text-left">{{ $despesa->descricao }}</td>
-                    <td class="text-left">{{ $despesa->tipo->descricao }}</td>
+                    <td class="text-left">{{ $despesa->planoConta->descricao ?? '-' }}</td>
                     <td class="text-right">{{ \App\Support\DinheiroBr::formatar($despesa->valor) }}</td>
                 </tr>
                 @php

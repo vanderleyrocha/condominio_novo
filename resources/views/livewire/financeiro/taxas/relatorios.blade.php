@@ -68,7 +68,7 @@
                             <td>{{ $taxa->status->rotulo() }}{{ $taxa->vencida() ? ' (vencida)' : '' }}</td>
                             <td>
                                 @if ((float) ($taxa->valor_pago ?? 0) > 0)
-                                    <a href="{{ route('pdf-novo.taxas.recibo', $taxa) }}" target="_blank" title="Ver recibo"
+                                    <a href="{{ route('pdf.taxas.recibo', $taxa) }}" target="_blank" title="Ver recibo"
                                        class="table-action">Recibo</a>
                                 @endif
                             </td>

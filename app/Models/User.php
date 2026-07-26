@@ -61,12 +61,4 @@ class User extends Authenticatable
     {
         return $this->papel === PapelUsuario::Proprietario;
     }
-
-    /**
-     * @deprecated Papel do legado — remapeado para Sindico no cutover (Fase 4).
-     */
-    public function isLevelOne(): bool
-    {
-        return $this->papel === PapelUsuario::LevelOne;
-    }
 }

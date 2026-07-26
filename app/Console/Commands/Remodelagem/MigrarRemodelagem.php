@@ -60,6 +60,12 @@ class MigrarRemodelagem extends Command
 
     public function handle(): int
     {
+        if (! Schema::hasTable('proprietarios')) {
+            $this->error('Schema antigo não existe mais (descomissionado na Fase 5) — o ETL não tem origem para ler.');
+
+            return self::FAILURE;
+        }
+
         $inicio = microtime(true);
 
         $this->truncarTudo();

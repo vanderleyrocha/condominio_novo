@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>{{ $title ?? \App\Support\ParametrosCondominio::nomeCondominio() }}</title>
+    <title>{{ $title ?? \App\Support\ConfiguracoesCondominio::nomeCondominio() }}</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -23,18 +23,18 @@
                aria-label="Navegação principal">
             <div class="flex items-center gap-3 border-b border-slate-800 px-6 py-5">
                 <span class="flex size-9 shrink-0 items-center justify-center rounded-lg bg-brand text-sm font-bold text-white" aria-hidden="true">
-                    {{ mb_strtoupper(mb_substr(\App\Support\ParametrosCondominio::nomeCondominio(), 0, 1)) }}
+                    {{ mb_strtoupper(mb_substr(\App\Support\ConfiguracoesCondominio::nomeCondominio(), 0, 1)) }}
                 </span>
-                <span class="truncate text-base font-semibold">{{ \App\Support\ParametrosCondominio::nomeCondominio() }}</span>
+                <span class="truncate text-base font-semibold">{{ \App\Support\ConfiguracoesCondominio::nomeCondominio() }}</span>
             </div>
             <nav class="flex-1 space-y-1 overflow-y-auto px-3 py-4 text-sm">
                 <x-nav-link route="painel" label="Painel" />
                 <p class="px-3 pt-5 pb-1.5 text-xs font-semibold uppercase tracking-wider text-slate-500">Financeiro</p>
                 <x-nav-link route="taxas.index" label="Taxas" />
-                <x-nav-link route="pagamentos-novo.index" label="Pagamentos" />
+                <x-nav-link route="pagamentos.index" label="Pagamentos" />
                 <x-nav-link route="lancamentos.index" label="Lançamentos" />
                 <x-nav-link route="inadimplencia.index" label="Inadimplência" />
-                <x-nav-link route="resumo-novo.index" label="Resumo financeiro" />
+                <x-nav-link route="resumo.index" label="Resumo financeiro" />
                 <p class="px-3 pt-5 pb-1.5 text-xs font-semibold uppercase tracking-wider text-slate-500">Cadastros</p>
                 <x-nav-link route="pessoas.index" label="Pessoas" />
                 <x-nav-link route="unidades.index" label="Unidades" />

@@ -2,7 +2,7 @@
     <div class="card">
         <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
             <h2 class="text-lg font-semibold text-slate-900">Inadimplência</h2>
-            <a href="{{ route('pdf-novo.inadimplencia.consolidado') }}" target="_blank"
+            <a href="{{ route('pdf.inadimplencia.consolidado') }}" target="_blank"
                class="btn btn-primary">Download</a>
         </div>
 

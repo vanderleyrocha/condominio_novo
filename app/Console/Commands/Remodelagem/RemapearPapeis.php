@@ -23,9 +23,11 @@ class RemapearPapeis extends Command
 
     public function handle(): int
     {
+        // 'level_one' como literal: o case foi removido do enum na Fase 5,
+        // mas o valor legado ainda existe em bancos pré-cutover
         [$de, $para] = $this->option('reverter')
-            ? [PapelUsuario::Sindico->value, PapelUsuario::LevelOne->value]
-            : [PapelUsuario::LevelOne->value, PapelUsuario::Sindico->value];
+            ? [PapelUsuario::Sindico->value, 'level_one']
+            : ['level_one', PapelUsuario::Sindico->value];
 
         $afetados = DB::table('users')->where('papel', $de)->update(['papel' => $para]);
 

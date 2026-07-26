@@ -26,6 +26,6 @@ class LancamentoFinanceiroPolicy
 
     private function podeGerir(User $user): bool
     {
-        return $user->isAdmin() || $user->isSindico() || $user->isLevelOne();
+        return $user->isAdmin() || $user->isSindico();
     }
 }

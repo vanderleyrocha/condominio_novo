@@ -6,18 +6,19 @@ namespace App\Console\Commands;
 
 use App\Enums\PapelUsuario;
 use App\Http\Controllers\PdfController;
-use App\Models\Imovel;
-use App\Models\Mensalidade;
 use App\Models\Pagamento;
+use App\Models\TaxaCondominial;
+use App\Models\Unidade;
 use App\Models\User;
-use App\Services\CorrecaoMonetariaService;
 use Illuminate\Console\Command;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 /**
  * Gera os documentos equivalentes aos golden files do legado
- * (_reversa_sdd/screens/golden/manifest.yaml) para comparação de paridade.
+ * (_reversa_sdd/screens/golden/manifest.yaml) para comparação de paridade —
+ * portado para o schema novo na Fase 5 (ids preservados pelo ETL: as mesmas
+ * entidades produzem documentos comparáveis).
  * Saída em storage/app/golden-novo/.
  */
 class GoldenGerar extends Command
@@ -26,7 +27,7 @@ class GoldenGerar extends Command
 
     protected $description = 'Gera PDFs equivalentes aos golden files do legado para comparação de paridade';
 
-    public function handle(CorrecaoMonetariaService $correcao): int
+    public function handle(): int
     {
         $dir = storage_path('app/'.$this->option('saida'));
         if (! is_dir($dir)) {
@@ -48,8 +49,9 @@ class GoldenGerar extends Command
             }
         };
 
+        // Ids preservados na migração: mesmas entidades dos golden files do legado
         foreach ([2137, 2287, 2308] as $id) {
-            $salvar("recibo_mensalidade_{$id}", fn () => $pdf->reciboMensalidade(Mensalidade::findOrFail($id)));
+            $salvar("recibo_mensalidade_{$id}", fn () => $pdf->reciboTaxa(TaxaCondominial::findOrFail($id)));
         }
 
         foreach ([1, 2] as $id) {
@@ -57,10 +59,10 @@ class GoldenGerar extends Command
         }
 
         foreach ([1, 2, 3] as $id) {
-            $salvar("dividas_imovel_{$id}", fn () => $pdf->dividasPorImovel(Imovel::findOrFail($id)));
+            $salvar("dividas_imovel_{$id}", fn () => $pdf->inadimplenciaPorUnidade(Unidade::findOrFail($id)));
         }
 
-        $salvar('dividas_consolidado', fn () => $pdf->dividasConsolidado());
+        $salvar('dividas_consolidado', fn () => $pdf->inadimplenciaConsolidada());
         $salvar('resumo_historico', fn () => $pdf->resumoHistorico());
         $salvar('resumo_intervalo_2025', fn () => $pdf->resumoIntervalo(
             Request::create('/pdf/resumo/intervalo', 'GET', ['de' => '2025-01-01', 'ate' => '2025-12-31']),

@@ -6,7 +6,7 @@ namespace App\Livewire\Financeiro\Inadimplencia;
 
 use App\Models\TaxaCondominial;
 use App\Models\Unidade;
-use App\Services\CorrecaoMonetariaNovaService;
+use App\Services\CorrecaoMonetariaService;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
@@ -34,7 +34,7 @@ class PorUnidade extends Component
         $this->memoriaAberta[$ano] = ! ($this->memoriaAberta[$ano] ?? false);
     }
 
-    public function render(CorrecaoMonetariaNovaService $correcao)
+    public function render(CorrecaoMonetariaService $correcao)
     {
         $taxas = TaxaCondominial::query()
             ->where('unidade_id', $this->unidade->id)

@@ -12,23 +12,22 @@ use Livewire\Attributes\Layout;
 use Livewire\Component;
 
 /**
- * Estorno de pagamento (tela pagamentos.estorno).
- * DEV-04: total a estornar deixa de ser JS vanilla e vira propriedade computada.
- * Regras de teto e reabertura de mensalidade vivem na Action EstornarPagamento.
+ * Estorno de pagamento no modelo novo. Regras de teto e recálculo de status
+ * vivem na Action EstornarPagamento.
  */
 #[Layout('layouts.app')]
 class Estorno extends Component
 {
     public Pagamento $pagamento;
 
-    /** @var array<int, string> [mensalidade_id => valor a estornar] */
+    /** @var array<int, string> [taxa_id => valor a estornar] */
     public array $valores = [];
 
     public string $erro = '';
 
     public function mount(Pagamento $pagamento): void
     {
-        if ($pagamento->estornado) {
+        if ($pagamento->estornos()->exists()) {
             session()->flash('error', 'Este pagamento já foi estornado.');
 
             $this->redirectRoute('pagamentos.show', ['pagamento' => $pagamento]);
@@ -38,12 +37,12 @@ class Estorno extends Component
 
         $this->authorize('estornar', $pagamento);
 
-        $pagamento->load(['proprietario', 'imovel', 'mensalidades']);
+        $pagamento->load(['pessoa', 'unidade', 'taxasCondominiais']);
 
         $this->pagamento = $pagamento;
 
-        foreach ($pagamento->mensalidades as $mensalidade) {
-            $this->valores[$mensalidade->id] = (string) $mensalidade->pivot->valor;
+        foreach ($pagamento->taxasCondominiais as $taxa) {
+            $this->valores[$taxa->id] = (string) $taxa->pivot->valor_aplicado;
         }
     }
 
@@ -62,14 +61,14 @@ class Estorno extends Component
 
         $valores = [];
 
-        foreach ($this->valores as $mensalidadeId => $valor) {
+        foreach ($this->valores as $taxaId => $valor) {
             if (! is_numeric($valor) || (float) $valor < 0) {
-                $this->addError("valores.{$mensalidadeId}", 'Informe um valor válido (maior ou igual a zero).');
+                $this->addError("valores.{$taxaId}", 'Informe um valor válido (maior ou igual a zero).');
 
                 return;
             }
 
-            $valores[(int) $mensalidadeId] = (float) $valor;
+            $valores[(int) $taxaId] = (float) $valor;
         }
 
         try {

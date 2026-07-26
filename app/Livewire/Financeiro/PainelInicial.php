@@ -4,17 +4,16 @@ declare(strict_types=1);
 
 namespace App\Livewire\Financeiro;
 
-use App\Models\Despesa;
-use App\Models\Mensalidade;
+use App\Models\LancamentoFinanceiro;
 use App\Models\Pagamento;
-use App\Models\Receita;
+use App\Models\TaxaCondominial;
 use App\Support\ResumoFinanceiro;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
 /**
- * Painel inicial — dashboard com o resumo financeiro real (DA-10, DEV-01),
- * usando as mesmas queries do Resumo via App\Support\ResumoFinanceiro.
+ * Painel inicial no modelo novo (substitui PainelInicial e a rota `/` no
+ * cutover) — mesmos agregados via ResumoFinanceiro.
  */
 #[Layout('layouts.app')]
 class PainelInicial extends Component
@@ -27,22 +26,26 @@ class PainelInicial extends Component
         $saldoAnterior = ResumoFinanceiro::saldoAnterior($inicioMes);
         $totaisMes = ResumoFinanceiro::totaisEntre($inicioMes, $fimMes);
 
-        $movimentoMes = $totaisMes['mensalidades'] + $totaisMes['receitas'] - $totaisMes['despesas'];
+        $movimentoMes = $totaisMes['taxas'] + $totaisMes['receitas'] - $totaisMes['despesas'];
         $saldoMes = $saldoAnterior + $movimentoMes;
 
-        $emAbertoQuantidade = Mensalidade::query()->emAberto()->count();
+        $emAbertoQuantidade = TaxaCondominial::query()->emAberto()->count();
 
-        $emAbertoTotal = (float) Mensalidade::query()
+        $emAbertoTotal = (float) TaxaCondominial::query()
             ->emAberto()
-            ->selectRaw('COALESCE(SUM(COALESCE(valor, 0) - COALESCE(desconto, 0) - COALESCE(valor_pago, 0)), 0) as total')
+            ->selectRaw('COALESCE(SUM(COALESCE(valor_original, 0) - COALESCE(valor_desconto, 0)
+                - COALESCE((SELECT SUM(valor_aplicado) FROM pagamento_taxa
+                    WHERE pagamento_taxa.taxa_condominial_id = taxas_condominiais.id), 0)), 0) as total')
             ->value('total');
 
-        $ultimaReceita = Receita::query()->orderByDesc('data')->orderByDesc('id')->first();
-        $ultimaDespesa = Despesa::query()->orderByDesc('data')->orderByDesc('id')->first();
+        $ultimaReceita = LancamentoFinanceiro::query()->where('natureza', 'receita')
+            ->orderByDesc('data_lancamento')->orderByDesc('id')->first();
+        $ultimaDespesa = LancamentoFinanceiro::query()->where('natureza', 'despesa')
+            ->orderByDesc('data_lancamento')->orderByDesc('id')->first();
 
         $ultimosPagamentos = Pagamento::query()
-            ->with(['proprietario', 'imovel'])
-            ->orderByDesc('data')
+            ->with(['pessoa', 'unidade'])
+            ->orderByDesc('data_pagamento')
             ->orderByDesc('id')
             ->limit(5)
             ->get();

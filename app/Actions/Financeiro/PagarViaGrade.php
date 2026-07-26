@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Actions\Financeiro;
 
 use App\Enums\FormaPagamento;
-use App\Models\PagamentoNovo;
+use App\Models\Pagamento;
 use App\Models\PagamentoTaxa;
 use App\Models\TaxaCondominial;
 use App\Models\User;
@@ -76,7 +76,7 @@ class PagarViaGrade
 
                 $rotulo = bccomp($delta, '0', 2) > 0 ? 'Pagamento' : 'Ajuste (redução)';
 
-                $pagamento = PagamentoNovo::query()->create([
+                $pagamento = Pagamento::query()->create([
                     'unidade_id' => $taxa->unidade_id,
                     'pessoa_id' => $responsavel,
                     'data_pagamento' => now()->toDateString(),

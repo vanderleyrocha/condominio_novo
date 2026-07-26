@@ -81,14 +81,14 @@
 
     <div id="assinatura">
         @php
-            $assinaturaImagem = public_path(\App\Support\ParametrosCondominio::get('assinatura_imagem', 'assets/img/Ass Doneska2.png'));
+            $assinaturaImagem = public_path(\App\Support\ConfiguracoesCondominio::get('assinatura_imagem', 'assets/img/Ass Doneska2.png'));
         @endphp
         @if (file_exists($assinaturaImagem))
             <img src="{{ $assinaturaImagem }}" alt="Assinatura">
         @endif
-        <p class="assinatura-nome">{{ \App\Support\ParametrosCondominio::assinaturaRecibo() }}</p>
+        <p class="assinatura-nome">{{ \App\Support\ConfiguracoesCondominio::assinaturaRecibo() }}</p>
         <p class="assinatura-cargo">
-            {{ \App\Support\ParametrosCondominio::get('assinatura_cargo', 'Responsável pela arrecadação das contribuições dos moradores') }}
+            {{ \App\Support\ConfiguracoesCondominio::get('assinatura_cargo', 'Responsável pela arrecadação das contribuições dos moradores') }}
         </p>
     </div>
 @endsection

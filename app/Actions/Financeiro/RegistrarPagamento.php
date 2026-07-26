@@ -4,62 +4,73 @@ declare(strict_types=1);
 
 namespace App\Actions\Financeiro;
 
-use App\Models\Mensalidade;
+use App\Enums\FormaPagamento;
 use App\Models\Pagamento;
-use App\Models\PagamentoMensalidade;
-use App\Models\Proprietario;
+use App\Models\PagamentoTaxa;
+use App\Models\Pessoa;
+use App\Models\TaxaCondominial;
+use App\Models\Unidade;
+use App\Services\StatusTaxaService;
 use DomainException;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Registro de pagamento com distribuição em múltiplas mensalidades (BR-MIGRAR-005).
- * Paridade estrita com PagamentoController::store() do legado (RN-11..RN-15):
- * distribuição em ordem cronológica, min(devido, saldo), excedente não redistribuído,
- * transação atômica com lockForUpdate (RN-14 — invariante de concorrência).
- *
- * @param list<int> $mensalidadeIds
+ * Registro de pagamento no modelo novo (substitui RegistrarPagamento no
+ * cutover). Mesmas regras de distribuição do legado (RN-11..RN-15):
+ * ordem cronológica, min(devido, saldo), excedente não redistribuído,
+ * transação atômica com lockForUpdate. Diferenças estruturais: o pagador é
+ * uma Pessoa, a unidade é explícita (uma pessoa pode ter várias) e o status
+ * da taxa é recalculado pelo serviço único em vez de gravar valor_pago.
  */
 class RegistrarPagamento
 {
+    public function __construct(private readonly StatusTaxaService $statusService) {}
+
     /**
-     * @param list<int> $mensalidadeIds
+     * @param  list<int>  $taxaIds
      */
     public function executar(
-        Proprietario $proprietario,
+        Pessoa $pessoa,
+        Unidade $unidade,
         string $data,
         string $descricao,
         float $valor,
-        array $mensalidadeIds,
+        array $taxaIds,
+        FormaPagamento $forma = FormaPagamento::NaoInformado,
     ): Pagamento {
-        return DB::transaction(function () use ($proprietario, $data, $descricao, $valor, $mensalidadeIds): Pagamento {
-            $imovel = $proprietario->imoveis()->first();
+        return DB::transaction(function () use ($pessoa, $unidade, $data, $descricao, $valor, $taxaIds, $forma): Pagamento {
+            $vinculada = $pessoa->vinculos()
+                ->where('unidade_id', $unidade->id)
+                ->whereNull('data_fim')
+                ->exists();
 
-            if ($imovel === null) {
-                throw new DomainException('Proprietário sem imóvel vinculado.');
+            if (! $vinculada) {
+                throw new DomainException('A pessoa não possui vínculo vigente com esta unidade.');
             }
 
             $pagamento = Pagamento::query()->create([
-                'data' => $data,
+                'unidade_id' => $unidade->id,
+                'pessoa_id' => $pessoa->id,
+                'data_pagamento' => $data,
                 'descricao' => $descricao,
-                'valor' => $valor,
-                'imovel_id' => $imovel->id,
-                'proprietario_id' => $proprietario->id,
+                'valor_total' => $valor,
+                'forma_pagamento' => $forma,
             ]);
 
             $saldo = $valor;
 
-            $mensalidades = Mensalidade::query()
-                ->whereIn('id', $mensalidadeIds)
-                ->where('imovel_id', $imovel->id) // distribuição restrita ao imóvel do proprietário
+            $taxas = TaxaCondominial::query()
+                ->whereIn('id', $taxaIds)
+                ->where('unidade_id', $unidade->id) // distribuição restrita à unidade
                 ->lockForUpdate()
-                ->orderBy('ano')
-                ->orderBy('mes')
+                ->orderBy('competencia_ano')
+                ->orderBy('competencia_mes')
                 ->get();
 
-            foreach ($mensalidades as $mensalidade) {
-                // devido = valor + acrescimo - desconto - valor_pago (RN-13)
-                $devido = (float) $mensalidade->valor + (float) $mensalidade->acrescimo
-                    - (float) $mensalidade->desconto - (float) $mensalidade->valor_pago;
+            foreach ($taxas as $taxa) {
+                // devido restante = valor devido - já pago (RN-13)
+                $jaPago = (float) ($taxa->pagamentoTaxas()->sum('valor_aplicado') ?: 0);
+                $devido = (float) $taxa->valorDevido() - $jaPago;
 
                 if ($devido <= 0 || $saldo <= 0) {
                     continue; // excedente não redistribuído (RN-12)
@@ -67,16 +78,13 @@ class RegistrarPagamento
 
                 $valorAplicado = min($devido, $saldo);
 
-                PagamentoMensalidade::query()->create([
+                PagamentoTaxa::query()->create([
                     'pagamento_id' => $pagamento->id,
-                    'mensalidade_id' => $mensalidade->id,
-                    'valor' => $valorAplicado,
+                    'taxa_condominial_id' => $taxa->id,
+                    'valor_aplicado' => $valorAplicado,
                 ]);
 
-                $mensalidade->update([
-                    'valor_pago' => (float) $mensalidade->valor_pago + $valorAplicado,
-                    'pago_em' => now(),
-                ]);
+                $this->statusService->recalcular($taxa);
 
                 $saldo -= $valorAplicado;
             }

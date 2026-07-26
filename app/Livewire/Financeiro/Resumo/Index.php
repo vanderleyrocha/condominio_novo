@@ -4,23 +4,18 @@ declare(strict_types=1);
 
 namespace App\Livewire\Financeiro\Resumo;
 
-use App\Models\CobrancaExtra;
-use App\Models\Despesa;
-use App\Models\Imovel;
-use App\Models\Mensalidade;
-use App\Models\Receita;
+use App\Models\CobrancaExtraordinaria;
+use App\Models\LancamentoFinanceiro;
+use App\Models\Unidade;
 use App\Support\ResumoFinanceiro;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Url;
 use Livewire\Component;
 
 /**
- * Resumo das receitas e despesas — matriz ano × imóveis.
- *
- * Reproduz o resumo do PageController legado já corrigido (EX-04):
- * saldo = mensalidades contabilizadas (ano de referência = pago_em, SEM
- * orWhereNull) + receitas − despesas. A apuração de cobranças extras
- * substitui a poupança/juros hardcoded do legado.
+ * Resumo das receitas e despesas no modelo novo — matriz ano × unidades.
+ * Mesma semântica do Resumo legado (EX-04): pagamentos aplicados em taxas
+ * contabilizadas, agrupados pelo ano do pagamento, + receitas − despesas.
  */
 #[Layout('layouts.app')]
 class Index extends Component
@@ -34,46 +29,34 @@ class Index extends Component
 
         $saldo = $temFiltro ? ResumoFinanceiro::saldoAte($this->apartirDe) : 0.0;
 
-        $imoveis = Imovel::query()->orderBy('nome')->pluck('nome', 'nome');
+        $unidades = Unidade::query()->orderBy('identificacao')->pluck('identificacao', 'identificacao');
 
-        // EX-04: ano de referência = pago_em, apenas mensalidades pagas (sem orWhereNull)
-        $mensalidades = Mensalidade::query()
-            ->with('imovel')
-            ->where('contabilizado', true)
-            ->whereNotNull('pago_em')
-            ->when($temFiltro, fn ($q) => $q->where('pago_em', '>', $this->apartirDe))
-            ->orderBy('pago_em')
+        $aplicacoes = ResumoFinanceiro::aplicacoesContabilizadas()
+            ->join('unidades', 'unidades.id', '=', 'taxas_condominiais.unidade_id')
+            ->when($temFiltro, fn ($q) => $q->where('pagamentos_novo.data_pagamento', '>', $this->apartirDe))
+            ->selectRaw('YEAR(pagamentos_novo.data_pagamento) as ano, unidades.identificacao, SUM(pagamento_taxa.valor_aplicado) as total')
+            ->groupBy('ano', 'unidades.identificacao')
+            ->orderBy('ano')
             ->get();
 
-        $despesas = Despesa::query()
-            ->when($temFiltro, fn ($q) => $q->where('data', '>', $this->apartirDe))
-            ->orderBy('data')
-            ->get();
-
-        $receitas = Receita::query()
-            ->when($temFiltro, fn ($q) => $q->where('data', '>', $this->apartirDe))
-            ->orderBy('data')
+        $lancamentos = LancamentoFinanceiro::query()
+            ->when($temFiltro, fn ($q) => $q->where('data_lancamento', '>', $this->apartirDe))
+            ->selectRaw('YEAR(data_lancamento) as ano, natureza, SUM(valor) as total')
+            ->groupBy('ano', 'natureza')
+            ->orderBy('ano')
             ->get();
 
         $resumo = [];
-        $totalImovel = [];
+        $totalUnidade = [];
 
-        foreach ($mensalidades as $mensalidade) {
-            $ano = $mensalidade->pago_em->year;
-            $nome = $mensalidade->imovel->nome;
-
-            $resumo[$ano][$nome] = ($resumo[$ano][$nome] ?? 0) + (float) $mensalidade->valor_pago;
-            $totalImovel[$nome] = ($totalImovel[$nome] ?? 0) + (float) $mensalidade->valor_pago;
+        foreach ($aplicacoes as $linha) {
+            $resumo[$linha->ano][$linha->identificacao] = ($resumo[$linha->ano][$linha->identificacao] ?? 0) + (float) $linha->total;
+            $totalUnidade[$linha->identificacao] = ($totalUnidade[$linha->identificacao] ?? 0) + (float) $linha->total;
         }
 
-        foreach ($despesas as $despesa) {
-            $ano = $despesa->data->year;
-            $resumo[$ano]['despesas'] = ($resumo[$ano]['despesas'] ?? 0) + (float) $despesa->valor;
-        }
-
-        foreach ($receitas as $receita) {
-            $ano = $receita->data->year;
-            $resumo[$ano]['receita'] = ($resumo[$ano]['receita'] ?? 0) + (float) $receita->valor;
+        foreach ($lancamentos as $linha) {
+            $chave = $linha->natureza === 'despesa' ? 'despesas' : 'receita';
+            $resumo[$linha->ano][$chave] = ($resumo[$linha->ano][$chave] ?? 0) + (float) $linha->total;
         }
 
         ksort($resumo);
@@ -87,26 +70,32 @@ class Index extends Component
             $totalDespesa += (float) ($dados['despesas'] ?? 0);
         }
 
-        foreach ($totalImovel as $valor) {
+        foreach ($totalUnidade as $valor) {
             $totalGeral += (float) $valor;
         }
 
-        // Apuração de cobranças extras: pivots + receitas vinculadas
-        $cobrancas = CobrancaExtra::query()
-            ->withSum('receitas as total_receitas', 'valor')
-            ->withSum('mensalidades as total_mensalidades', 'cobranca_extra_mensalidade.valor')
+        // Apuração de cobranças extraordinárias: pivot de taxas + receitas com origem
+        $cobrancas = CobrancaExtraordinaria::query()
+            ->withSum('taxasCondominiais as total_taxas', 'cobranca_extraordinaria_taxa.valor')
             ->orderBy('nome')
             ->get();
 
+        $receitasPorCobranca = LancamentoFinanceiro::query()
+            ->where('origem_type', CobrancaExtraordinaria::class)
+            ->selectRaw('origem_id, COALESCE(SUM(valor), 0) as total')
+            ->groupBy('origem_id')
+            ->pluck('total', 'origem_id');
+
         return view('livewire.financeiro.resumo.index', [
-            'imoveis' => $imoveis,
+            'unidades' => $unidades,
             'resumo' => $resumo,
-            'totalImovel' => $totalImovel,
+            'totalUnidade' => $totalUnidade,
             'saldo' => $saldo,
             'totalReceita' => $totalReceita,
             'totalDespesa' => $totalDespesa,
             'totalGeral' => $totalGeral,
             'cobrancas' => $cobrancas,
+            'receitasPorCobranca' => $receitasPorCobranca,
         ]);
     }
 }

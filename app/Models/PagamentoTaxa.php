@@ -29,7 +29,7 @@ class PagamentoTaxa extends Pivot
 
     public function pagamento(): BelongsTo
     {
-        return $this->belongsTo(PagamentoNovo::class, 'pagamento_id');
+        return $this->belongsTo(Pagamento::class, 'pagamento_id');
     }
 
     public function taxaCondominial(): BelongsTo
