@@ -68,7 +68,11 @@ Route::middleware('auth')->group(function () {
     Route::get('/resumo', Index::class)->name('resumo.index');
     Route::get('/resumo/intervalo', Intervalo::class)->name('resumo.intervalo');
 
-    // Financeiro — Administração
+    // Financeiro — Administração (modelo novo, Fase 4)
+    Route::get('/indices', App\Livewire\Financeiro\Indices\Gestao::class)->name('indices.index');
+    Route::get('/configuracoes', App\Livewire\Financeiro\Configuracoes\Edicao::class)->name('configuracoes.edit');
+
+    // Financeiro — Administração (schema antigo; fora do menu, removidas na Fase 5)
     Route::get('/ipca', Gestao::class)->name('ipca.index');
     Route::get('/cobrancas-extras', App\Livewire\Financeiro\CobrancasExtras\Gestao::class)->name('cobrancas-extras.index');
     Route::get('/parametros', Edicao::class)->name('parametros.edit');

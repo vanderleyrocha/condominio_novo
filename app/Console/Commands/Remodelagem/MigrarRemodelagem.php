@@ -36,12 +36,14 @@ class MigrarRemodelagem extends Command
         'unidades',
         'pessoas',
         'indices_economicos',
+        'configuracoes',
         'condominios',
         'migration_id_map',
     ];
 
     private const PASSOS = [
         'migrar:condominios',
+        'migrar:configuracoes',
         'migrar:pessoas',
         'migrar:unidades',
         'migrar:vinculos',

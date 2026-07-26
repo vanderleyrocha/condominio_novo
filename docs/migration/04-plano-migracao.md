@@ -67,6 +67,10 @@ pagamentos, cobranças e pivots), o que torna a resolução de FKs determinísti
 `migration_id_map` registra tudo mesmo assim.
 
 1. `migrar:condominios` — cria o condomínio único (nome de `parametros.nome_condominio`).
+1b. `migrar:configuracoes` — migração SELETIVA de `parametros` → `configuracoes`
+    (taxa_mensalidade_padrao, metodo_correcao, subtitulo_recibo,
+    assinatura_recibo, ano_inicial_filtro_pagamentos). `nome_condominio` virou
+    `condominios.nome`; `data_corte_level_one` é aposentada no cutover.
 2. `migrar:pessoas` — proprietários e inquilinos → `pessoas`, com deduplicação
    por CPF (mapa N:1). Ainda NÃO cria vínculos.
 3. `migrar:unidades` — `imoveis` → `unidades`.
@@ -143,9 +147,14 @@ de menor acoplamento, mantendo a suíte verde a cada módulo:
       ATENÇÃO: edições feitas nas telas novas antes do cutover são descartadas
       pela reconstrução final do `migrar:remodelagem` — usá-las apenas para
       desenvolvimento/homologação até lá.
-- [ ] **Parâmetros/índices**: `Ipca` → `IndiceEconomico`, `Parametro` →
-      `Configuracao` (migração seletiva de chaves), `CorrecaoMonetariaService`,
-      `ParametrosCondominio`.
+- [x] **Parâmetros/índices** (2026-07): telas novas Índices Econômicos (séries
+      IPCA/IGP-M/INCC com filtro; admin-only — dado global) e Configurações do
+      condomínio (admin+sindico; sem a data de corte level_one, aposentada).
+      `ConfiguracoesCondominio` substitui `ParametrosCondominio` no modelo novo
+      (nome do condomínio via `condominios.nome`); ETL `migrar:configuracoes`.
+      `CorrecaoMonetariaService` permanece no schema antigo — será apontado
+      para `IndiceEconomico`/`ConfiguracoesCondominio` junto com o módulo
+      Mensalidades/Relatórios, onde é usado.
 - [ ] **Mensalidades/taxas**: `Mensalidade` → `TaxaCondominial` (Lançamento,
       GradeAnual, EdicaoIndividual, Listagem, Relatórios, Dividas).
 - [ ] **Pagamentos**: `Pagamento`/`PagamentoMensalidade` → novo

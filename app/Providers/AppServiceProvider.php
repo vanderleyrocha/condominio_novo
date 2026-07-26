@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace App\Providers;
 
 use App\Listeners\RegistrarAcesso;
+use App\Models\Configuracao;
 use App\Models\Despesa;
 use App\Models\Imovel;
+use App\Models\IndiceEconomico;
 use App\Models\Ipca;
 use App\Models\Mensalidade;
 use App\Models\Pagamento;
@@ -15,8 +17,10 @@ use App\Models\Proprietario;
 use App\Models\Receita;
 use App\Models\Unidade;
 use App\Models\User;
+use App\Policies\ConfiguracaoPolicy;
 use App\Policies\DespesaPolicy;
 use App\Policies\ImovelPolicy;
+use App\Policies\IndiceEconomicoPolicy;
 use App\Policies\IpcaPolicy;
 use App\Policies\MensalidadePolicy;
 use App\Policies\PagamentoPolicy;
@@ -52,8 +56,10 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(User::class, UserPolicy::class);
         Gate::policy(Ipca::class, IpcaPolicy::class);
 
-        // Modelo novo (docs/migration) — módulo Cadastros da Fase 4
+        // Modelo novo (docs/migration) — módulos da Fase 4
         Gate::policy(Pessoa::class, PessoaPolicy::class);
         Gate::policy(Unidade::class, UnidadePolicy::class);
+        Gate::policy(IndiceEconomico::class, IndiceEconomicoPolicy::class);
+        Gate::policy(Configuracao::class, ConfiguracaoPolicy::class);
     }
 }

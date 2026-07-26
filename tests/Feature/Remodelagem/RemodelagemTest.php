@@ -21,7 +21,11 @@ function semearLegado(): void
 {
     $t = now()->toDateTimeString();
 
-    DB::table('parametros')->insert(['chave' => 'nome_condominio', 'valor' => 'Condomínio Teste', 'created_at' => $t, 'updated_at' => $t]);
+    DB::table('parametros')->insert([
+        ['chave' => 'nome_condominio', 'valor' => 'Condomínio Teste', 'created_at' => $t, 'updated_at' => $t],
+        ['chave' => 'taxa_mensalidade_padrao', 'valor' => '150.00', 'created_at' => $t, 'updated_at' => $t],
+        ['chave' => 'data_corte_level_one', 'valor' => '2024-03-10', 'created_at' => $t, 'updated_at' => $t],
+    ]);
 
     DB::table('proprietarios')->insert([
         // p1: simples, responsável proprietário
@@ -115,6 +119,9 @@ it('migra o legado completo com reconciliação sem divergências', function () 
     // Condomínio único nomeado pelo parâmetro do legado
     expect(DB::table('condominios')->count())->toBe(1)
         ->and(DB::table('condominios')->value('nome'))->toBe('Condomínio Teste');
+
+    // Configurações: migração seletiva (nome e data de corte ficam de fora)
+    expect(DB::table('configuracoes')->pluck('chave')->all())->toBe(['taxa_mensalidade_padrao']);
 
     // Dedupe: Ana (p1) == inquilina de p2 pelo CPF → 4 pessoas, não 5
     expect(DB::table('pessoas')->count())->toBe(4)
