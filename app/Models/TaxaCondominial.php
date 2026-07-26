@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Enums\StatusTaxa;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -63,6 +64,27 @@ class TaxaCondominial extends Model implements Auditable
         return $this->belongsToMany(CobrancaExtraordinaria::class, 'cobranca_extraordinaria_taxa')
             ->withPivot('valor')
             ->withTimestamps();
+    }
+
+    /**
+     * "Em aberto" — mesma semântica do legado (Mensalidade::scopeEmAberto):
+     * total pago < valor líquido (original - desconto) E vencimento < hoje.
+     * O total pago é a soma de pagamento_taxa (fonte de verdade).
+     */
+    public function scopeEmAberto(Builder $query): Builder
+    {
+        return $query
+            ->whereRaw(
+                'COALESCE((SELECT SUM(valor_aplicado) FROM pagamento_taxa
+                    WHERE pagamento_taxa.taxa_condominial_id = taxas_condominiais.id), 0)
+                 < (COALESCE(valor_original, 0) - COALESCE(valor_desconto, 0))'
+            )
+            ->where('vencimento', '<', now()->toDateString());
+    }
+
+    public function getValorLiquidoAttribute(): string
+    {
+        return bcsub((string) $this->valor_original, (string) $this->valor_desconto, 2);
     }
 
     /**

@@ -155,20 +155,35 @@ de menor acoplamento, mantendo a suíte verde a cada módulo:
       `CorrecaoMonetariaService` permanece no schema antigo — será apontado
       para `IndiceEconomico`/`ConfiguracoesCondominio` junto com o módulo
       Mensalidades/Relatórios, onde é usado.
-- [ ] **Mensalidades/taxas**: `Mensalidade` → `TaxaCondominial` (Lançamento,
-      GradeAnual, EdicaoIndividual, Listagem, Relatórios, Dividas).
-- [ ] **Pagamentos**: `Pagamento`/`PagamentoMensalidade` → novo
-      `Pagamento`/`PagamentoTaxa` (Registro, Estorno, Detalhe, Listagem,
-      Actions `RegistrarPagamento`/`EstornarPagamento`).
-- [ ] **Cobranças extras**: `CobrancaExtra` → `CobrancaExtraordinaria` + rateio.
-- [ ] **Financeiro consolidado**: `Receita`/`Despesa`/`DespesaTipo` →
-      `LancamentoFinanceiro`/`PlanoConta` (Resumo, PainelInicial, PdfController,
-      `ResumoFinanceiro`).
-- [ ] **Acesso**: `users.pessoa_id`, `condominio_user`, Global Scope de
-      condomínio; reescrever Policies para admin/sindico/proprietario,
-      remapear `level_one` → `sindico` nos dados, aposentar a regra
-      `data_corte_level_one` e remover o parâmetro correspondente da tela
-      de parâmetros.
+- [x] **Mensalidades/taxas** (2026-07): telas `/taxas` (Listagem, Lançamento,
+      EdicaoIndividual, GradeAnual, Relatórios) + `/inadimplencia` (Listagem,
+      PorUnidade). MUDANÇA ESTRUTURAL: o valor pago não é mais editável — a
+      grade anual gera pagamentos reais pelo delta (`PagarViaGrade`; redução =
+      ajuste negativo) e a edição individual só altera o valor devido, com
+      status recalculado pelo serviço único. `CorrecaoMonetariaNovaService`
+      replica a matemática de paridade lendo `indices_economicos` — validado
+      contra o serviço antigo nos dados reais (valores idênticos).
+- [x] **Pagamentos** (2026-07): telas `/pagamentos-novo` (Registro com seleção
+      pessoa+unidade+forma, FIFO idêntico ao legado; Listagem; Detalhe;
+      Estorno com os mesmos tetos RN-16..18/P10). Rotas/namespace transitórios
+      `pagamentos-novo`, renomeados na Fase 5 junto com a tabela.
+- [x] **Cobranças extraordinárias** (2026-07): `/cobrancas-extraordinarias`
+      com método de rateio; apuração via pivot de taxas + lançamentos com
+      origem polimórfica.
+- [x] **Financeiro consolidado** (2026-07): `/lancamentos` (tela unificada de
+      receitas+despesas com plano de contas e criação rápida de plano),
+      `/resumo-novo` + intervalo, `/painel-novo` e `PdfNovoController` (7 PDFs;
+      reutiliza os templates de dados agregados e ganha versões `-novo` dos
+      acoplados a Models antigos). `ResumoFinanceiroNovo` validado contra
+      `ResumoFinanceiro` nos dados reais: saldo histórico idêntico (diff 0.00).
+- [x] **Acesso** (2026-07): tela de usuários passa a oferecer os papéis novos
+      (o select itera o enum) + vínculo `pessoa_id` (obrigatório para papel
+      proprietario); `migrar:remapear-papeis` pronto para o cutover
+      (level_one → sindico, reversível com --reverter) — NÃO roda no
+      orquestrador. Policies dos módulos novos aplicam a matriz
+      admin/sindico/proprietario. Global Scope de condomínio adiado para o
+      epic multi-condomínio (hoje há 1 condomínio; `condominio_user` já
+      populado pelo ETL).
 
 Cutover:
 
@@ -188,5 +203,17 @@ Cutover:
 
 - [ ] Após estabilização (2-4 semanas), remover tabelas antigas
       (migration de drop) e a `migration_id_map`.
-- [ ] Remover código morto (Models/Actions/Policies antigos, `migrar:legado`
-      e os commands `migrar:*` da remodelagem).
+- [ ] Remover código morto: Models/Actions/Policies/telas antigas
+      (Proprietario, Imovel, Mensalidade, Pagamento antigo, Receita, Despesa,
+      DespesaTipo, Ipca, Parametro, CobrancaExtra), rotas do bloco
+      "Schema antigo", `migrar:legado` e os commands `migrar:*`.
+- [ ] Renomear os artefatos transitórios: tabela `pagamentos_novo` →
+      `pagamentos` (feito no cutover), classe `PagamentoNovo` → `Pagamento`,
+      namespaces/rotas `pagamentos-novo` → `pagamentos`, `resumo-novo` →
+      `resumo`, `painel-novo` → rota `/`, `pdf-novo.*` → `pdf.*`,
+      `PdfNovoController` → `PdfController`, `ResumoFinanceiroNovo` →
+      `ResumoFinanceiro`, `CorrecaoMonetariaNovaService` →
+      `CorrecaoMonetariaService`, e remover o case deprecated
+      `PapelUsuario::LevelOne`.
+- [ ] Regravar os golden files contra as telas/PDFs novos (critério de aceite
+      já validado por paridade de agregados na Fase 4).

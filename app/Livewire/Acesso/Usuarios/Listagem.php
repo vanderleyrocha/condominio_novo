@@ -7,6 +7,7 @@ namespace App\Livewire\Acesso\Usuarios;
 use App\Actions\Acesso\ExcluirUsuario;
 use App\Actions\Acesso\SalvarUsuario;
 use App\Enums\PapelUsuario;
+use App\Models\Pessoa;
 use App\Models\User;
 use DomainException;
 use Illuminate\Validation\Rule;
@@ -32,6 +33,8 @@ class Listagem extends Component
     public string $password = '';
 
     public string $password_confirmation = '';
+
+    public ?int $pessoaId = null;
 
     public ?int $confirmandoExclusaoId = null;
 
@@ -59,6 +62,13 @@ class Listagem extends Component
                 Rule::unique('users', 'email')->ignore($this->usuarioId),
             ],
             'papel' => ['required', Rule::enum(PapelUsuario::class)],
+            // Papel proprietario exige vínculo com pessoa (portal do condômino)
+            'pessoaId' => [
+                Rule::requiredIf($this->papel === PapelUsuario::Proprietario->value),
+                'nullable',
+                'integer',
+                Rule::exists('pessoas', 'id')->whereNull('deleted_at'),
+            ],
             // Senha obrigatória na criação; opcional na edição (validada só se preenchida)
             'password' => $this->usuarioId !== null && $this->password === ''
                 ? ['nullable']
@@ -70,7 +80,7 @@ class Listagem extends Component
     {
         $this->authorize('gerenciar', User::class);
 
-        $this->reset('usuarioId', 'name', 'email', 'password', 'password_confirmation');
+        $this->reset('usuarioId', 'name', 'email', 'password', 'password_confirmation', 'pessoaId');
         $this->papel = 'level_one';
         $this->resetErrorBag();
         $this->exibirFormulario = true;
@@ -86,6 +96,7 @@ class Listagem extends Component
         $this->name = $usuario->name;
         $this->email = $usuario->email;
         $this->papel = $usuario->papel->value;
+        $this->pessoaId = $usuario->pessoa_id;
         $this->reset('password', 'password_confirmation');
         $this->resetErrorBag();
         $this->exibirFormulario = true;
@@ -93,7 +104,7 @@ class Listagem extends Component
 
     public function cancelar(): void
     {
-        $this->reset('exibirFormulario', 'usuarioId', 'name', 'email', 'password', 'password_confirmation');
+        $this->reset('exibirFormulario', 'usuarioId', 'name', 'email', 'password', 'password_confirmation', 'pessoaId');
         $this->resetErrorBag();
     }
 
@@ -113,6 +124,7 @@ class Listagem extends Component
                 'email' => $dados['email'],
                 'papel' => PapelUsuario::from($dados['papel']),
                 'password' => $this->password !== '' ? $this->password : null,
+                'pessoa_id' => $this->pessoaId,
             ], $usuario);
 
             session()->flash('status', $usuario === null
@@ -159,10 +171,12 @@ class Listagem extends Component
     {
         return view('livewire.acesso.usuarios.listagem', [
             'usuarios' => User::query()
+                ->with('pessoa')
                 ->withMax('accesses as ultimo_acesso', 'datetime')
                 ->orderBy('name')
                 ->get(),
             'papeis' => PapelUsuario::cases(),
+            'pessoas' => Pessoa::query()->orderBy('nome')->get(['id', 'nome']),
         ]);
     }
 }

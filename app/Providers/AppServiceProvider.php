@@ -10,11 +10,14 @@ use App\Models\Despesa;
 use App\Models\Imovel;
 use App\Models\IndiceEconomico;
 use App\Models\Ipca;
+use App\Models\LancamentoFinanceiro;
 use App\Models\Mensalidade;
 use App\Models\Pagamento;
+use App\Models\PagamentoNovo;
 use App\Models\Pessoa;
 use App\Models\Proprietario;
 use App\Models\Receita;
+use App\Models\TaxaCondominial;
 use App\Models\Unidade;
 use App\Models\User;
 use App\Policies\ConfiguracaoPolicy;
@@ -22,11 +25,14 @@ use App\Policies\DespesaPolicy;
 use App\Policies\ImovelPolicy;
 use App\Policies\IndiceEconomicoPolicy;
 use App\Policies\IpcaPolicy;
+use App\Policies\LancamentoFinanceiroPolicy;
 use App\Policies\MensalidadePolicy;
+use App\Policies\PagamentoNovoPolicy;
 use App\Policies\PagamentoPolicy;
 use App\Policies\PessoaPolicy;
 use App\Policies\ProprietarioPolicy;
 use App\Policies\ReceitaPolicy;
+use App\Policies\TaxaCondominialPolicy;
 use App\Policies\UnidadePolicy;
 use App\Policies\UserPolicy;
 use Illuminate\Auth\Events\Login;
@@ -61,5 +67,8 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(Unidade::class, UnidadePolicy::class);
         Gate::policy(IndiceEconomico::class, IndiceEconomicoPolicy::class);
         Gate::policy(Configuracao::class, ConfiguracaoPolicy::class);
+        Gate::policy(TaxaCondominial::class, TaxaCondominialPolicy::class);
+        Gate::policy(PagamentoNovo::class, PagamentoNovoPolicy::class);
+        Gate::policy(LancamentoFinanceiro::class, LancamentoFinanceiroPolicy::class);
     }
 }

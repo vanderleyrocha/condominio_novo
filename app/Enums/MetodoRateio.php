@@ -13,4 +13,13 @@ enum MetodoRateio: string
     case FracaoIdeal = 'fracao_ideal';
     case Igualitario = 'igualitario';
     case Manual = 'manual';
+
+    public function rotulo(): string
+    {
+        return match ($this) {
+            self::FracaoIdeal => 'Fração ideal',
+            self::Igualitario => 'Igualitário',
+            self::Manual => 'Manual',
+        };
+    }
 }

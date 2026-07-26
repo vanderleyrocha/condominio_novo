@@ -14,4 +14,27 @@ enum StatusTaxa: string
     case Aberto = 'aberto';
     case PagoParcial = 'pago_parcial';
     case Pago = 'pago';
+
+    public function rotulo(): string
+    {
+        return match ($this) {
+            self::Aberto => 'Em aberto',
+            self::PagoParcial => 'Pago parcial',
+            self::Pago => 'Pago',
+        };
+    }
+
+    /**
+     * Cores da grade anual — mesma semântica visual do legado
+     * (StatusMensalidade::classeGrade): pago+contabilizado, pago+não
+     * contabilizado, vencida sem pagamento, em dia.
+     */
+    public function classeGrade(bool $contabilizado = true, bool $vencida = false): string
+    {
+        return match (true) {
+            $this === self::Pago || $this === self::PagoParcial => $contabilizado ? 'bg-status-pago' : 'bg-status-pago-nao-contabilizado',
+            $vencida => 'bg-status-vencida',
+            default => '',
+        };
+    }
 }

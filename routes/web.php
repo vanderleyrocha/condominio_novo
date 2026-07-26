@@ -3,10 +3,12 @@
 declare(strict_types=1);
 
 use App\Http\Controllers\PdfController;
+use App\Http\Controllers\PdfNovoController;
 use App\Livewire\Acesso\Login;
 use App\Livewire\Acesso\Usuarios\LogAcessos;
 use App\Livewire\Cadastros\Pessoas\Formulario;
 use App\Livewire\Financeiro\Dividas\PorImovel;
+use App\Livewire\Financeiro\Inadimplencia\PorUnidade;
 use App\Livewire\Financeiro\Ipca\Gestao;
 use App\Livewire\Financeiro\Mensalidades\EdicaoIndividual;
 use App\Livewire\Financeiro\Mensalidades\GradeAnual;
@@ -17,6 +19,7 @@ use App\Livewire\Financeiro\Pagamentos\Detalhe;
 use App\Livewire\Financeiro\Pagamentos\Estorno;
 use App\Livewire\Financeiro\Pagamentos\Registro;
 use App\Livewire\Financeiro\PainelInicial;
+use App\Livewire\Financeiro\PainelNovo;
 use App\Livewire\Financeiro\Parametros\Edicao;
 use App\Livewire\Financeiro\Resumo\Index;
 use App\Livewire\Financeiro\Resumo\Intervalo;
@@ -43,6 +46,42 @@ Route::post('/logout', function () {
 Route::middleware('auth')->group(function () {
     // Painel inicial = resumo financeiro real (DA-10)
     Route::get('/', PainelInicial::class)->name('painel');
+
+    // ===== Modelo novo (Fase 4 da remodelagem) =====
+
+    // Financeiro — Taxas condominiais
+    Route::get('/taxas/{ano?}', App\Livewire\Financeiro\Taxas\Listagem::class)
+        ->where('ano', '[0-9]{4}')->name('taxas.index');
+    Route::get('/taxas/lancamento', App\Livewire\Financeiro\Taxas\Lancamento::class)->name('taxas.lancar');
+    Route::get('/taxas/{taxa}/editar', App\Livewire\Financeiro\Taxas\EdicaoIndividual::class)->name('taxas.edit');
+    Route::get('/taxas/grade/{ano}', App\Livewire\Financeiro\Taxas\GradeAnual::class)->name('taxas.grade');
+    Route::get('/taxas/relatorios', App\Livewire\Financeiro\Taxas\Relatorios::class)->name('taxas.relatorios');
+
+    // Financeiro — Pagamentos (rotas transitórias; renomeadas na Fase 5)
+    Route::get('/pagamentos-novo', App\Livewire\Financeiro\PagamentosNovo\Listagem::class)->name('pagamentos-novo.index');
+    Route::get('/pagamentos-novo/registrar', App\Livewire\Financeiro\PagamentosNovo\Registro::class)->name('pagamentos-novo.create');
+    Route::get('/pagamentos-novo/{pagamento}', App\Livewire\Financeiro\PagamentosNovo\Detalhe::class)->name('pagamentos-novo.show');
+    Route::get('/pagamentos-novo/{pagamento}/estorno', App\Livewire\Financeiro\PagamentosNovo\Estorno::class)->name('pagamentos-novo.estorno');
+
+    // Financeiro — Lançamentos / Inadimplência / Resumo / Painel
+    Route::get('/lancamentos', App\Livewire\Financeiro\Lancamentos\Listagem::class)->name('lancamentos.index');
+    Route::get('/inadimplencia', App\Livewire\Financeiro\Inadimplencia\Listagem::class)->name('inadimplencia.index');
+    Route::get('/inadimplencia/unidade/{unidade}', PorUnidade::class)->name('inadimplencia.unidade');
+    Route::get('/resumo-novo', App\Livewire\Financeiro\ResumoNovo\Index::class)->name('resumo-novo.index');
+    Route::get('/resumo-novo/intervalo', App\Livewire\Financeiro\ResumoNovo\Intervalo::class)->name('resumo-novo.intervalo');
+    Route::get('/painel-novo', PainelNovo::class)->name('painel-novo');
+    Route::get('/cobrancas-extraordinarias', App\Livewire\Financeiro\CobrancasExtraordinarias\Gestao::class)->name('cobrancas-extraordinarias.index');
+
+    // PDFs — modelo novo
+    Route::get('/pdf-novo/taxas/{taxa}/recibo', [PdfNovoController::class, 'reciboTaxa'])->name('pdf-novo.taxas.recibo');
+    Route::get('/pdf-novo/pagamentos/{pagamento}/recibo', [PdfNovoController::class, 'reciboPagamento'])->name('pdf-novo.pagamentos.recibo');
+    Route::get('/pdf-novo/inadimplencia/unidade/{unidade}', [PdfNovoController::class, 'inadimplenciaPorUnidade'])->name('pdf-novo.inadimplencia.unidade');
+    Route::get('/pdf-novo/inadimplencia/consolidado', [PdfNovoController::class, 'inadimplenciaConsolidada'])->name('pdf-novo.inadimplencia.consolidado');
+    Route::get('/pdf-novo/despesas', [PdfNovoController::class, 'despesasPorPeriodo'])->name('pdf-novo.despesas');
+    Route::get('/pdf-novo/resumo', [PdfNovoController::class, 'resumoHistorico'])->name('pdf-novo.resumo');
+    Route::get('/pdf-novo/resumo/intervalo', [PdfNovoController::class, 'resumoIntervalo'])->name('pdf-novo.resumo.intervalo');
+
+    // ===== Schema antigo (fora do menu; removido na Fase 5) =====
 
     // Financeiro — Mensalidades
     Route::get('/mensalidades/{ano?}', Listagem::class)

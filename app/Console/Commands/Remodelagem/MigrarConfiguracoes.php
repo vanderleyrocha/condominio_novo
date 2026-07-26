@@ -24,6 +24,14 @@ class MigrarConfiguracoes extends ComandoRemodelagem
         'assinatura_recibo' => 'string',
         'metodo_correcao' => 'string',
         'ano_inicial_filtro_pagamentos' => 'int',
+        // Chaves auxiliares dos PDFs (migradas apenas se existirem no legado;
+        // a aplicação usa os mesmos defaults do ParametrosCondominio)
+        'cidade_recibo' => 'string',
+        'identificacao_bloco' => 'string',
+        'url_sistema' => 'string',
+        'assinatura_imagem' => 'string',
+        'assinatura_cargo' => 'string',
+        'finalidade_reserva' => 'string',
     ];
 
     protected $signature = 'migrar:configuracoes {--truncar}';

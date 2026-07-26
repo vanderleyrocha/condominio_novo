@@ -18,4 +18,18 @@ enum FormaPagamento: string
     case Cheque = 'cheque';
     case Outro = 'outro';
     case NaoInformado = 'nao_informado';
+
+    public function rotulo(): string
+    {
+        return match ($this) {
+            self::Dinheiro => 'Dinheiro',
+            self::Pix => 'PIX',
+            self::Transferencia => 'Transferência',
+            self::Boleto => 'Boleto',
+            self::Cartao => 'Cartão',
+            self::Cheque => 'Cheque',
+            self::Outro => 'Outro',
+            self::NaoInformado => 'Não informado',
+        };
+    }
 }
