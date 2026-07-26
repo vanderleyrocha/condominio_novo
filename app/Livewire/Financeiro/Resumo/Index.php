@@ -34,14 +34,14 @@ class Index extends Component
         $aplicacoes = ResumoFinanceiro::aplicacoesContabilizadas()
             ->join('unidades', 'unidades.id', '=', 'taxas_condominiais.unidade_id')
             ->when($temFiltro, fn ($q) => $q->where('pagamentos_novo.data_pagamento', '>', $this->apartirDe))
-            ->selectRaw('YEAR(pagamentos_novo.data_pagamento) as ano, unidades.identificacao, SUM(pagamento_taxa.valor_aplicado) as total')
+            ->selectRaw(ResumoFinanceiro::anoSql('pagamentos_novo.data_pagamento').' as ano, unidades.identificacao, SUM(pagamento_taxa.valor_aplicado) as total')
             ->groupBy('ano', 'unidades.identificacao')
             ->orderBy('ano')
             ->get();
 
         $lancamentos = LancamentoFinanceiro::query()
             ->when($temFiltro, fn ($q) => $q->where('data_lancamento', '>', $this->apartirDe))
-            ->selectRaw('YEAR(data_lancamento) as ano, natureza, SUM(valor) as total')
+            ->selectRaw(ResumoFinanceiro::anoSql('data_lancamento').' as ano, natureza, SUM(valor) as total')
             ->groupBy('ano', 'natureza')
             ->orderBy('ano')
             ->get();

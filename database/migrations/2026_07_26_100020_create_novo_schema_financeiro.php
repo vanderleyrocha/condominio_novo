@@ -7,11 +7,11 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Fase 1 da remodelagem — domínio financeiro do schema novo.
- *
- * `pagamentos_novo`: nome temporário durante a coexistência — a tabela antiga
- * `pagamentos` não pode ser alterada até a Fase 4; no cutover ocorre o rename
- * para `pagamentos` (ver 04-plano-migracao.md).
+ * Domínio financeiro do schema novo (docs/migration/03-modelo-dados.md).
+ * Estado FINAL pós-Fase 5. Em ambientes que passaram pela migração de dados,
+ * este arquivo já constava como aplicado (a tabela de pagamentos nasceu com o
+ * nome transitório e foi renomeada por migrar:descomissionar); em instalações
+ * novas, cria o schema definitivo diretamente.
  *
  * Convenção de sinal: estornos têm valor_total/valor_aplicado NEGATIVOS,
  * como no legado (03-modelo-dados.md).
@@ -52,7 +52,7 @@ return new class extends Migration
             $table->index('status');
         });
 
-        Schema::create('pagamentos_novo', function (Blueprint $table) {
+        Schema::create('pagamentos', function (Blueprint $table) {
             $table->id();
             // Nullable: o legado possui pagamentos sem imóvel associado
             $table->foreignId('unidade_id')->nullable()->constrained('unidades')->restrictOnDelete();
@@ -61,7 +61,7 @@ return new class extends Migration
             $table->string('descricao');
             $table->decimal('valor_total', 12, 2); // negativo em estornos
             $table->string('forma_pagamento', 20)->default('nao_informado'); // App\Enums\FormaPagamento
-            $table->foreignId('estorno_de_id')->nullable()->constrained('pagamentos_novo')->restrictOnDelete();
+            $table->foreignId('estorno_de_id')->nullable()->constrained('pagamentos')->restrictOnDelete();
             $table->timestamps();
             $table->softDeletes();
             $table->index('data_pagamento');
@@ -69,7 +69,7 @@ return new class extends Migration
 
         Schema::create('pagamento_taxa', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('pagamento_id')->constrained('pagamentos_novo')->cascadeOnDelete();
+            $table->foreignId('pagamento_id')->constrained('pagamentos')->cascadeOnDelete();
             $table->foreignId('taxa_condominial_id')->constrained('taxas_condominiais')->cascadeOnDelete();
             $table->decimal('valor_aplicado', 10, 2); // negativo em estornos
             $table->timestamps();
@@ -150,23 +150,10 @@ return new class extends Migration
             $table->timestamps();
             $table->unique(['condominio_id', 'chave'], 'uk_configuracao_chave');
         });
-
-        // Infra do ETL (Fase 2): mapa old_id -> new_id por entidade.
-        // Para pessoas o mapa é N:1 (deduplicação por CPF).
-        Schema::create('migration_id_map', function (Blueprint $table) {
-            $table->id();
-            $table->string('entidade', 50);
-            $table->unsignedBigInteger('id_antigo');
-            $table->unsignedBigInteger('id_novo');
-            $table->timestamps();
-            $table->unique(['entidade', 'id_antigo'], 'uk_id_map_entidade_antigo');
-            $table->index(['entidade', 'id_novo'], 'ix_id_map_entidade_novo');
-        });
     }
 
     public function down(): void
     {
-        Schema::dropIfExists('migration_id_map');
         Schema::dropIfExists('configuracoes');
         Schema::dropIfExists('regras_reajuste');
         Schema::dropIfExists('indices_economicos');
@@ -174,7 +161,7 @@ return new class extends Migration
         Schema::dropIfExists('cobranca_extraordinaria_taxa');
         Schema::dropIfExists('cobrancas_extraordinarias');
         Schema::dropIfExists('pagamento_taxa');
-        Schema::dropIfExists('pagamentos_novo');
+        Schema::dropIfExists('pagamentos');
         Schema::dropIfExists('taxas_condominiais');
         Schema::dropIfExists('planos_contas');
     }

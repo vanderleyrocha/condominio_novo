@@ -227,17 +227,30 @@ das telas antigas locais.
       `CorrecaoMonetariaService`, `PainelInicial` na rota `/`.
 - [x] `golden:gerar` portado para o schema novo (mesmos ids — ETL preserva);
       teste de correção monetária portado para `indices_economicos`.
-- [ ] APÓS o cutover de produção: remover os commands `migrar:*` do ETL, as
-      migrations do schema antigo e os testes de remodelagem (limpeza final).
+- [x] Limpeza final (2026-07): commands `migrar:*` do ETL, migrations do
+      schema antigo/transitórias e testes de remodelagem removidos do HEAD.
+      O kit completo da migração de dados está congelado na tag git
+      **`etl-remodelagem`** (inclui `migrar:legado` para dumps do sistema
+      original e `migrar:cutover` para o schema antigo). `migrar:descomissionar`
+      permanece no HEAD (auto-guardado; "nada a fazer" quando já executado).
+      Migrations consolidadas no estado final (instalação nova cria direto o
+      schema definitivo; `users.papel` string default 'sindico').
+      Suíte COMPLETA verde pela primeira vez (46/46 — pdo_sqlite habilitado
+      no CLI local).
 
-## Runbook do cutover em PRODUÇÃO (janela única)
+## Runbook da migração do dado DEFINITIVO (dump do servidor remoto)
 
-1. Backup completo do banco + `php artisan down`.
-2. Deploy desta versão.
-3. `php artisan migrate` (cria o schema novo em paralelo).
-4. `php artisan migrar:cutover` (ETL final + validação profunda + remap de
-   papéis — aborta sem efeitos se algo divergir).
-5. `php artisan migrar:descomissionar` (drop do schema antigo + rename).
-6. Smoke test e `php artisan up`.
-7. Rollback (antes do passo 5): `migrar:remapear-papeis --reverter` + deploy
-   anterior. Após o passo 5: restaurar o backup do passo 1.
+O kit de ETL vive na tag `etl-remodelagem` (o HEAD já está limpo). Num
+workspace/staging com o dump definitivo:
+
+1. Backup do dump definitivo.
+2. `git checkout etl-remodelagem` + `composer install`.
+3. Se o dump é do sistema LEGADO ORIGINAL: `php artisan migrar:legado --dump=...`
+   (restaura no stage e popula o schema antigo). Se já é o schema antigo desta
+   app, basta restaurar o dump no banco.
+4. `php artisan migrate` + `php artisan migrar:cutover` (ETL + validação
+   profunda + remap de papéis — aborta sem efeitos se algo divergir).
+5. `git checkout <branch final>` + `composer install` +
+   `php artisan migrar:descomissionar` (drop do antigo + rename).
+6. Exportar o banco resultante e implantá-lo com o código final; smoke test.
+7. Rollback a qualquer momento: o dump do passo 1 (o processo roda sobre cópia).

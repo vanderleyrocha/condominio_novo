@@ -17,7 +17,8 @@ return new class extends Migration
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
-            $table->enum('papel', ['admin', 'level_one'])->default('level_one');
+            // App\Enums\PapelUsuario (admin, sindico, proprietario)
+            $table->string('papel', 20)->default('sindico');
             $table->string('foto_perfil')->nullable();
             $table->rememberToken();
             $table->timestamps();

@@ -15,33 +15,11 @@ use App\Models\User;
 use App\Support\ConfiguracoesCondominio;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\DB;
 
 uses(RefreshDatabase::class);
 
 beforeEach(function () {
     ConfiguracoesCondominio::limparCache();
-});
-
-it('migra apenas as chaves de configuração, deixando nome e data de corte de fora', function () {
-    $t = now()->toDateTimeString();
-    DB::table('parametros')->insert([
-        ['chave' => 'taxa_mensalidade_padrao', 'valor' => '150.00', 'created_at' => $t, 'updated_at' => $t],
-        ['chave' => 'metodo_correcao', 'valor' => 'soma_simples', 'created_at' => $t, 'updated_at' => $t],
-        ['chave' => 'subtitulo_recibo', 'valor' => 'Bloco X', 'created_at' => $t, 'updated_at' => $t],
-        ['chave' => 'assinatura_recibo', 'valor' => 'Fulano', 'created_at' => $t, 'updated_at' => $t],
-        ['chave' => 'ano_inicial_filtro_pagamentos', 'valor' => '2014', 'created_at' => $t, 'updated_at' => $t],
-        ['chave' => 'nome_condominio', 'valor' => 'Condomínio Teste', 'created_at' => $t, 'updated_at' => $t],
-        ['chave' => 'data_corte_level_one', 'valor' => '2024-03-10', 'created_at' => $t, 'updated_at' => $t],
-    ]);
-    Condominio::factory()->create();
-
-    $this->artisan('migrar:configuracoes')->assertSuccessful();
-
-    expect(Configuracao::query()->count())->toBe(5)
-        ->and(Configuracao::query()->where('chave', 'nome_condominio')->exists())->toBeFalse()
-        ->and(Configuracao::query()->where('chave', 'data_corte_level_one')->exists())->toBeFalse()
-        ->and(Configuracao::query()->where('chave', 'taxa_mensalidade_padrao')->value('tipo_dado'))->toBe('decimal');
 });
 
 it('lê e grava configurações tipadas escopadas pelo condomínio', function () {

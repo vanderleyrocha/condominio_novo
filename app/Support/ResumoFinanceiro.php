@@ -46,6 +46,17 @@ final class ResumoFinanceiro
     }
 
     /**
+     * Expressão SQL portável para extrair o ano de uma coluna de data
+     * (YEAR() no MySQL; strftime no sqlite dos testes).
+     */
+    public static function anoSql(string $coluna): string
+    {
+        return DB::connection()->getDriverName() === 'sqlite'
+            ? "CAST(strftime('%Y', {$coluna}) AS INTEGER)"
+            : "YEAR({$coluna})";
+    }
+
+    /**
      * Aplicações de pagamento em taxas CONTABILIZADAS (base dos agregados).
      * A tabela de pagamentos entra com o alias fixo `pagamentos_novo` (resolvido
      * pelo Model), então os consumidores sobrevivem ao rename da Fase 5.

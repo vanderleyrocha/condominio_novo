@@ -23,8 +23,11 @@ final class ConfiguracoesCondominio
     public static function get(string $chave, ?string $default = null): ?string
     {
         if (self::$cache === null) {
-            self::$cache = Configuracao::query()
-                ->where('condominio_id', self::condominioId())
+            // Sem condomínio cadastrado (instalação nova, testes): valem os defaults
+            $condominioId = Condominio::query()->value('id');
+
+            self::$cache = $condominioId === null ? [] : Configuracao::query()
+                ->where('condominio_id', $condominioId)
                 ->pluck('valor', 'chave')
                 ->all();
         }
