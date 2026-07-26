@@ -132,8 +132,17 @@ componentes Livewire, `PdfController`, `ResumoFinanceiro`,
 `CorrecaoMonetariaService`) e ~30 views Blade. Migrar **por módulo**, na ordem
 de menor acoplamento, mantendo a suíte verde a cada módulo:
 
-- [ ] **Cadastros**: `Proprietario`/`Imovel` → `Pessoa`/`Unidade`/`UnidadePessoa`
-      (Actions `Salvar*`/`Excluir*`, Policies, Livewire `Cadastros\*`, views).
+- [x] **Cadastros** (2026-07): telas novas Pessoas (listagem com busca +
+      formulário com CPF/CNPJ validado) e Unidades (CRUD inline + modal de
+      vínculos com papel, vigência e transferência de responsável financeiro).
+      Actions `SalvarPessoa`/`ExcluirPessoa`/`SalvarUnidade`/`ExcluirUnidade`/
+      `VincularPessoa`/`EncerrarVinculo`, Policies `PessoaPolicy`/`UnidadePolicy`
+      (admin/sindico; level_one aceito até o remap), rule `CpfOuCnpj`.
+      Menu aponta para as telas novas; as telas antigas (Proprietários/Imóveis)
+      permanecem acessíveis por URL até a Fase 5.
+      ATENÇÃO: edições feitas nas telas novas antes do cutover são descartadas
+      pela reconstrução final do `migrar:remodelagem` — usá-las apenas para
+      desenvolvimento/homologação até lá.
 - [ ] **Parâmetros/índices**: `Ipca` → `IndiceEconomico`, `Parametro` →
       `Configuracao` (migração seletiva de chaves), `CorrecaoMonetariaService`,
       `ParametrosCondominio`.

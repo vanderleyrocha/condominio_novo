@@ -10,16 +10,20 @@ use App\Models\Imovel;
 use App\Models\Ipca;
 use App\Models\Mensalidade;
 use App\Models\Pagamento;
+use App\Models\Pessoa;
 use App\Models\Proprietario;
 use App\Models\Receita;
+use App\Models\Unidade;
 use App\Models\User;
 use App\Policies\DespesaPolicy;
 use App\Policies\ImovelPolicy;
 use App\Policies\IpcaPolicy;
 use App\Policies\MensalidadePolicy;
 use App\Policies\PagamentoPolicy;
+use App\Policies\PessoaPolicy;
 use App\Policies\ProprietarioPolicy;
 use App\Policies\ReceitaPolicy;
+use App\Policies\UnidadePolicy;
 use App\Policies\UserPolicy;
 use Illuminate\Auth\Events\Login;
 use Illuminate\Support\Facades\Event;
@@ -47,5 +51,9 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(Imovel::class, ImovelPolicy::class);
         Gate::policy(User::class, UserPolicy::class);
         Gate::policy(Ipca::class, IpcaPolicy::class);
+
+        // Modelo novo (docs/migration) — módulo Cadastros da Fase 4
+        Gate::policy(Pessoa::class, PessoaPolicy::class);
+        Gate::policy(Unidade::class, UnidadePolicy::class);
     }
 }

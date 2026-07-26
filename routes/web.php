@@ -2,6 +2,24 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\PdfController;
+use App\Livewire\Acesso\Login;
+use App\Livewire\Acesso\Usuarios\LogAcessos;
+use App\Livewire\Cadastros\Pessoas\Formulario;
+use App\Livewire\Financeiro\Dividas\PorImovel;
+use App\Livewire\Financeiro\Ipca\Gestao;
+use App\Livewire\Financeiro\Mensalidades\EdicaoIndividual;
+use App\Livewire\Financeiro\Mensalidades\GradeAnual;
+use App\Livewire\Financeiro\Mensalidades\Lancamento;
+use App\Livewire\Financeiro\Mensalidades\Listagem;
+use App\Livewire\Financeiro\Mensalidades\Relatorios;
+use App\Livewire\Financeiro\Pagamentos\Detalhe;
+use App\Livewire\Financeiro\Pagamentos\Estorno;
+use App\Livewire\Financeiro\Pagamentos\Registro;
+use App\Livewire\Financeiro\PainelInicial;
+use App\Livewire\Financeiro\Parametros\Edicao;
+use App\Livewire\Financeiro\Resumo\Index;
+use App\Livewire\Financeiro\Resumo\Intervalo;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
@@ -11,7 +29,7 @@ use Illuminate\Support\Facades\Route;
  */
 
 Route::middleware('guest')->group(function () {
-    Route::get('/login', App\Livewire\Acesso\Login::class)->name('login');
+    Route::get('/login', Login::class)->name('login');
 });
 
 Route::post('/logout', function () {
@@ -24,21 +42,21 @@ Route::post('/logout', function () {
 
 Route::middleware('auth')->group(function () {
     // Painel inicial = resumo financeiro real (DA-10)
-    Route::get('/', App\Livewire\Financeiro\PainelInicial::class)->name('painel');
+    Route::get('/', PainelInicial::class)->name('painel');
 
     // Financeiro — Mensalidades
-    Route::get('/mensalidades/{ano?}', App\Livewire\Financeiro\Mensalidades\Listagem::class)
+    Route::get('/mensalidades/{ano?}', Listagem::class)
         ->where('ano', '[0-9]{4}')->name('mensalidades.index');
-    Route::get('/mensalidades/lancamento', App\Livewire\Financeiro\Mensalidades\Lancamento::class)->name('mensalidades.lancar');
-    Route::get('/mensalidades/{mensalidade}/editar', App\Livewire\Financeiro\Mensalidades\EdicaoIndividual::class)->name('mensalidades.edit');
-    Route::get('/mensalidades/grade/{ano}', App\Livewire\Financeiro\Mensalidades\GradeAnual::class)->name('mensalidades.grade');
-    Route::get('/mensalidades/relatorios', App\Livewire\Financeiro\Mensalidades\Relatorios::class)->name('mensalidades.relatorios');
+    Route::get('/mensalidades/lancamento', Lancamento::class)->name('mensalidades.lancar');
+    Route::get('/mensalidades/{mensalidade}/editar', EdicaoIndividual::class)->name('mensalidades.edit');
+    Route::get('/mensalidades/grade/{ano}', GradeAnual::class)->name('mensalidades.grade');
+    Route::get('/mensalidades/relatorios', Relatorios::class)->name('mensalidades.relatorios');
 
     // Financeiro — Pagamentos
     Route::get('/pagamentos', App\Livewire\Financeiro\Pagamentos\Listagem::class)->name('pagamentos.index');
-    Route::get('/pagamentos/registrar', App\Livewire\Financeiro\Pagamentos\Registro::class)->name('pagamentos.create');
-    Route::get('/pagamentos/{pagamento}', App\Livewire\Financeiro\Pagamentos\Detalhe::class)->name('pagamentos.show');
-    Route::get('/pagamentos/{pagamento}/estorno', App\Livewire\Financeiro\Pagamentos\Estorno::class)->name('pagamentos.estorno');
+    Route::get('/pagamentos/registrar', Registro::class)->name('pagamentos.create');
+    Route::get('/pagamentos/{pagamento}', Detalhe::class)->name('pagamentos.show');
+    Route::get('/pagamentos/{pagamento}/estorno', Estorno::class)->name('pagamentos.estorno');
 
     // Financeiro — Receitas / Despesas
     Route::get('/receitas', App\Livewire\Financeiro\Receitas\Listagem::class)->name('receitas.index');
@@ -46,16 +64,22 @@ Route::middleware('auth')->group(function () {
 
     // Financeiro — Dívidas / Resumo
     Route::get('/dividas', App\Livewire\Financeiro\Dividas\Listagem::class)->name('dividas.index');
-    Route::get('/dividas/imovel/{imovel}', App\Livewire\Financeiro\Dividas\PorImovel::class)->name('dividas.imovel');
-    Route::get('/resumo', App\Livewire\Financeiro\Resumo\Index::class)->name('resumo.index');
-    Route::get('/resumo/intervalo', App\Livewire\Financeiro\Resumo\Intervalo::class)->name('resumo.intervalo');
+    Route::get('/dividas/imovel/{imovel}', PorImovel::class)->name('dividas.imovel');
+    Route::get('/resumo', Index::class)->name('resumo.index');
+    Route::get('/resumo/intervalo', Intervalo::class)->name('resumo.intervalo');
 
     // Financeiro — Administração
-    Route::get('/ipca', App\Livewire\Financeiro\Ipca\Gestao::class)->name('ipca.index');
+    Route::get('/ipca', Gestao::class)->name('ipca.index');
     Route::get('/cobrancas-extras', App\Livewire\Financeiro\CobrancasExtras\Gestao::class)->name('cobrancas-extras.index');
-    Route::get('/parametros', App\Livewire\Financeiro\Parametros\Edicao::class)->name('parametros.edit');
+    Route::get('/parametros', Edicao::class)->name('parametros.edit');
 
-    // Cadastros
+    // Cadastros — modelo novo (Fase 4 da remodelagem)
+    Route::get('/pessoas', App\Livewire\Cadastros\Pessoas\Listagem::class)->name('pessoas.index');
+    Route::get('/pessoas/nova', Formulario::class)->name('pessoas.create');
+    Route::get('/pessoas/{pessoa}/editar', Formulario::class)->name('pessoas.edit');
+    Route::get('/unidades', App\Livewire\Cadastros\Unidades\Listagem::class)->name('unidades.index');
+
+    // Cadastros — telas do schema antigo (fora do menu; removidas na Fase 5)
     Route::get('/proprietarios', App\Livewire\Cadastros\Proprietarios\Listagem::class)->name('proprietarios.index');
     Route::get('/proprietarios/novo', App\Livewire\Cadastros\Proprietarios\Formulario::class)->name('proprietarios.create');
     Route::get('/proprietarios/{proprietario}/editar', App\Livewire\Cadastros\Proprietarios\Formulario::class)->name('proprietarios.edit');
@@ -63,15 +87,15 @@ Route::middleware('auth')->group(function () {
 
     // Acesso
     Route::get('/usuarios', App\Livewire\Acesso\Usuarios\Listagem::class)->name('usuarios.index');
-    Route::get('/usuarios/acessos', App\Livewire\Acesso\Usuarios\LogAcessos::class)->name('usuarios.acessos');
+    Route::get('/usuarios/acessos', LogAcessos::class)->name('usuarios.acessos');
     Route::get('/perfil', App\Livewire\Acesso\Perfil\Edicao::class)->name('perfil.edit');
 
     // PDFs — controllers finos (fluxo não-Livewire)
-    Route::get('/pdf/mensalidades/{mensalidade}/recibo', [App\Http\Controllers\PdfController::class, 'reciboMensalidade'])->name('pdf.mensalidades.recibo');
-    Route::get('/pdf/pagamentos/{pagamento}/recibo', [App\Http\Controllers\PdfController::class, 'reciboPagamento'])->name('pdf.pagamentos.recibo');
-    Route::get('/pdf/dividas/imovel/{imovel}', [App\Http\Controllers\PdfController::class, 'dividasPorImovel'])->name('pdf.dividas.imovel');
-    Route::get('/pdf/dividas/consolidado', [App\Http\Controllers\PdfController::class, 'dividasConsolidado'])->name('pdf.dividas.consolidado');
-    Route::get('/pdf/despesas', [App\Http\Controllers\PdfController::class, 'despesasPorPeriodo'])->name('pdf.despesas');
-    Route::get('/pdf/resumo', [App\Http\Controllers\PdfController::class, 'resumoHistorico'])->name('pdf.resumo');
-    Route::get('/pdf/resumo/intervalo', [App\Http\Controllers\PdfController::class, 'resumoIntervalo'])->name('pdf.resumo.intervalo');
+    Route::get('/pdf/mensalidades/{mensalidade}/recibo', [PdfController::class, 'reciboMensalidade'])->name('pdf.mensalidades.recibo');
+    Route::get('/pdf/pagamentos/{pagamento}/recibo', [PdfController::class, 'reciboPagamento'])->name('pdf.pagamentos.recibo');
+    Route::get('/pdf/dividas/imovel/{imovel}', [PdfController::class, 'dividasPorImovel'])->name('pdf.dividas.imovel');
+    Route::get('/pdf/dividas/consolidado', [PdfController::class, 'dividasConsolidado'])->name('pdf.dividas.consolidado');
+    Route::get('/pdf/despesas', [PdfController::class, 'despesasPorPeriodo'])->name('pdf.despesas');
+    Route::get('/pdf/resumo', [PdfController::class, 'resumoHistorico'])->name('pdf.resumo');
+    Route::get('/pdf/resumo/intervalo', [PdfController::class, 'resumoIntervalo'])->name('pdf.resumo.intervalo');
 });
