@@ -1,30 +1,30 @@
 <div class="space-y-4">
-    <div class="flex items-center justify-between">
-        <h1 class="text-xl font-semibold">Grade Anual — {{ $ano }}</h1>
+    <div class="flex flex-wrap items-center justify-between gap-3">
+        <h1 class="page-title">Grade Anual — {{ $ano }}</h1>
         <button type="button" wire:click="gravar" wire:loading.attr="disabled"
-                class="rounded-md bg-brand px-4 py-2 text-sm font-medium text-white transition hover:bg-brand-dark disabled:opacity-50">
+                class="btn btn-primary">
             Gravar
         </button>
     </div>
 
     @if ($erro !== '')
-        <div class="rounded-md bg-red-50 p-3 text-sm text-red-800">{{ $erro }}</div>
+        <div class="alert alert-danger">{{ $erro }}</div>
     @endif
 
-    <div class="overflow-x-auto rounded-lg bg-white shadow">
-        <table class="min-w-full divide-y divide-gray-200 text-sm">
-            <thead class="bg-gray-50">
-                <tr class="text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
-                    <th class="px-3 py-3">Imóvel</th>
+    <div class="overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm">
+        <table class="table-modern">
+            <thead>
+                <tr>
+                    <th>Imóvel</th>
                     @foreach (\App\Support\MesesBr::abreviados() as $abreviado)
-                        <th class="px-2 py-3 text-center">{{ $abreviado }}</th>
+                        <th class="px-2 text-center">{{ $abreviado }}</th>
                     @endforeach
                 </tr>
             </thead>
-            <tbody class="divide-y divide-gray-100">
+            <tbody>
                 @forelse ($imoveis as $imovel)
                     <tr>
-                        <td class="whitespace-nowrap px-3 py-2 font-medium">{{ $imovel->nome }}</td>
+                        <td class="whitespace-nowrap font-medium">{{ $imovel->nome }}</td>
                         @php
                             $porMes = $imovel->mensalidades->keyBy('mes');
                         @endphp
@@ -39,16 +39,16 @@
                                 @if ($mensalidade !== null)
                                     <input type="number" step="0.01" min="0"
                                            wire:model="valores.{{ $mensalidade->id }}"
-                                           class="w-20 rounded border border-gray-300 bg-transparent px-1 py-1 text-right text-xs focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand">
+                                           class="w-20 rounded-md border border-slate-400/40 bg-white/70 px-1.5 py-1 text-right text-xs shadow-sm transition focus:border-brand focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand/25">
                                 @else
-                                    <span class="text-gray-300">-</span>
+                                    <span class="text-slate-300">-</span>
                                 @endif
                             </td>
                         @endfor
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="13" class="px-4 py-6 text-center text-gray-500">
+                        <td colspan="13" class="py-6 text-center text-slate-500">
                             Nenhuma mensalidade encontrada para o ano de {{ $ano }}.
                         </td>
                     </tr>
@@ -59,7 +59,7 @@
 
     <div>
         <button type="button" wire:click="gravar" wire:loading.attr="disabled"
-                class="rounded-md bg-brand px-4 py-2 text-sm font-medium text-white transition hover:bg-brand-dark disabled:opacity-50">
+                class="btn btn-primary">
             Gravar
         </button>
     </div>

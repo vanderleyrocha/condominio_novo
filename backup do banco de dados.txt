@@ -1,0 +1,119 @@
+FLUXO 1 - GERAR BACKUP NO HOSTINGER
+
+1) Conectar no servidor (remoto):
+ssh -p 65002 u815349007@147.93.38.18
+
+2) Gerar o dump no servidor remoto:
+mysqldump \
+  --host=127.0.0.1 \
+  --port=3306 \
+  --user=u815349007_pedemeia2 \
+  --single-transaction \
+  --quick \
+  --routines \
+  --triggers \
+  --events \
+  --hex-blob \
+  --default-character-set=utf8mb4 \
+  -p \
+  u815349007_pedemeia2 | gzip > ~/backup_pe_de_meia.sql.gz
+
+
+  mysqldump \
+  --host=127.0.0.1 \
+  --port=3306 \
+  --user=u815349007_pedemeia2 \
+  --single-transaction \
+  --quick \
+  --routines \
+  --triggers \
+  --events \
+  --hex-blob \
+  --default-character-set=utf8mb4 \
+  -p \
+  u815349007_pedemeia2 | gzip > /d/sql/backup_pe_de_meia_2026_07_01.sql.gz
+
+3) Sair do SSH:
+exit
+
+4) Baixar o arquivo do servidor para este PC (executar no PowerShell local, fora do SSH):
+scp -P 65002 u815349007@147.93.38.18:~/backup_pe_de_meia.sql.gz "D:\sql\backup_pe_de_meia_2026_07_03.sql.gz"
+
+
+FLUXO 2 - RESTAURAR NO MYSQL LOCAL DESTE PC (LARAGON)
+
+Executar no PowerShell local (fora do SSH):
+gunzip -c /d/sql/backup_pe_de_meia_2026_07_03.sql.gz | mysql -u u815349007_pedemeia2 -p u815349007_pedemeia2
+
+Observacao:
+- Se o banco local tiver outro nome, trocar pedemeia pelo nome correto.
+- Se o usuario local nao for u815349007_pedemeia2, ajustar -u.
+
+
+FLUXO 2.1 - GERAR BACKUP DO BANCO LOCAL DESTE PC (LARAGON), EXCLUINDO TABELAS GRANDES
+
+Executar no PowerShell local:
+mysqldump \
+  --host=127.0.0.1 \
+  --port=3306 \
+  --user=root \
+  --single-transaction \
+  --quick \
+  --routines \
+  --triggers \
+  --events \
+  --hex-blob \
+  --default-character-set=utf8mb4 \
+  --ignore-table=u815349007_pedemeia2.sgp_lote_linhas \
+  --ignore-table=u815349007_pedemeia2.sgp_lote_reversoes \
+  --ignore-table=u815349007_pedemeia2.stg_simaed_alunos_matriculas_importacao \
+  -p \
+  u815349007_pedemeia2 | gzip > "D:\sql\backup_local_u815349007_pedemeia2.sql.gz"
+
+Observacao:
+- O comando acima solicita a senha do usuario root local.
+- Ajuste o caminho de saida se quiser salvar o arquivo em outra pasta.
+
+
+FLUXO 3 - RESTAURAR NO PROPRIO HOSTINGER (QUANDO NECESSARIO)
+
+1) Enviar o arquivo deste PC para o servidor Hostinger (executar no PowerShell local, fora do SSH):
+scp -P 65002 /d/sql/backup_pe_de_meia.sql.gz u815349007@147.93.38.18:~/backup_pe_de_meia.sql.gz
+
+2) Executar a restauracao dentro do SSH remoto:
+gunzip -c ~/backup_pe_de_meia.sql.gz | mysql -u u815349007_pedemeia2 -p u815349007_pedemeia2
+
+
+ERROS COMUNS
+
+- Rodar comando com caminho D:\... dentro do SSH remoto (isso nao existe no Linux remoto).
+- Rodar scp no sentido errado.
+  Correto para baixar: origem remota -> destino local.
+- Esquecer de usar -p (senha) no mysqldump/mysql.
+- Tentar restaurar em banco inexistente no destino.
+
+
+Backup parcial:
+mysqldump -u u815349007_pedemeia2 -p u815349007_pedemeia2 \
+  --single-transaction \
+  --quick \
+  alunos_censo_2025 \
+  cadastros_mec \
+  cadastro_estudante_envios_mec \
+  estudantes \
+  matriculas \
+  matricula_historicos \
+  matricula_movimentacao_envios_mec \
+  matricula_movimentacoes \
+  sgp_lote_importacoes \
+  sgp_lote_linhas \
+  sgp_lote_ocorrencias \
+  sgp_lote_reversoes \
+  stg_simaed_alunos_matriculas \
+  stg_simaed_alunos_matriculas_importacao \
+  user_access_logs \
+| gzip > /d/sql/backup_tabelas_pedemeia.sql.gz
+
+
+Restauração do backup parcial:
+gunzip -c /d/sql/backup_tabelas_pedemeia.sql.gz | mysql -u u815349007_pedemeia2 -p u815349007_pedemeia2

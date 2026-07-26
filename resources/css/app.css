@@ -5,16 +5,33 @@
 @source '../views';
 
 /*
- * Tokens derivados do legado (_reversa_sdd/design-system/tokens-derived.md).
- * Semântica das cores de status vem da grade anual de mensalidades do legado.
+ * Identidade visual do sistema.
+ *
+ * Paleta: base neutra slate + azul vibrante como cor primária.
+ * Os tokens semânticos (surface, edge, ink) permitem evoluir para um
+ * modo escuro futuramente sem reescrever as views.
+ *
+ * As cores de status da grade anual de mensalidades vêm do legado
+ * (_reversa_sdd/design-system/tokens-derived.md) e não devem mudar de
+ * semântica.
  */
 @theme {
     --font-sans: 'Montserrat', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
 
-    --color-brand: #2ca8ff;
-    --color-brand-dark: #1b8fe0;
+    /* Cor primária: azul vibrante e profissional */
+    --color-brand: #2563eb; /* blue-600 */
+    --color-brand-dark: #1d4ed8; /* blue-700 — hover e foco */
+    --color-brand-light: #eff6ff; /* blue-50 — fundos selecionados */
+
     --color-accent: #f96332;
+
+    /* Tokens semânticos de superfície e texto (tema claro) */
+    --color-surface: #ffffff;
+    --color-surface-muted: #f8fafc; /* slate-50 */
+    --color-edge: #e2e8f0; /* slate-200 */
+    --color-ink: #0f172a; /* slate-900 */
+    --color-ink-soft: #64748b; /* slate-500 */
 
     /* grade anual: pago+contabilizado | pago+não contabilizado | vencida | parcial */
     --color-status-pago: #9df5d3;
@@ -22,6 +39,187 @@
     --color-status-vencida: #ffc0cb;
     --color-status-parcial: #fff3cd;
     --color-status-total: #e6fffa;
+}
+
+@layer base {
+    body {
+        @apply bg-slate-50 text-slate-900;
+    }
+
+    [x-cloak] {
+        display: none !important;
+    }
+}
+
+@layer components {
+    /* ---------- Cartões e seções ---------- */
+    .card {
+        @apply rounded-xl border border-slate-200 bg-white p-6 shadow-sm;
+    }
+
+    .card-title {
+        @apply text-base font-semibold text-slate-900;
+    }
+
+    .section-label {
+        @apply text-xs font-semibold uppercase tracking-wide text-slate-500;
+    }
+
+    .page-title {
+        @apply text-xl font-semibold tracking-tight text-slate-900;
+    }
+
+    /* ---------- Botões ---------- */
+    .btn {
+        @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none;
+    }
+
+    .btn-primary {
+        @apply bg-brand text-white hover:bg-brand-dark;
+    }
+
+    .btn-secondary {
+        @apply border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 hover:text-slate-900;
+    }
+
+    .btn-ghost {
+        @apply text-slate-600 shadow-none hover:bg-slate-100 hover:text-slate-900;
+    }
+
+    .btn-success {
+        @apply bg-emerald-600 text-white hover:bg-emerald-700 focus-visible:ring-emerald-600;
+    }
+
+    .btn-warning {
+        @apply bg-amber-500 text-white hover:bg-amber-600 focus-visible:ring-amber-500;
+    }
+
+    .btn-danger {
+        @apply bg-red-600 text-white hover:bg-red-700 focus-visible:ring-red-600;
+    }
+
+    .btn-sm {
+        @apply px-3 py-1.5 text-xs;
+    }
+
+    /* Ações dentro de tabelas: botões compactos "soft" */
+    .table-action {
+        @apply inline-flex items-center gap-1 rounded-lg border border-brand/20 bg-brand-light px-2.5 py-1 text-xs font-semibold text-brand shadow-sm transition duration-200 hover:border-brand hover:bg-brand hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-1;
+    }
+
+    .table-action-muted {
+        @apply inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs font-semibold text-slate-600 shadow-sm transition duration-200 hover:border-slate-300 hover:bg-slate-200 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-1;
+    }
+
+    .table-action-danger {
+        @apply inline-flex items-center gap-1 rounded-lg border border-red-200 bg-red-50 px-2.5 py-1 text-xs font-semibold text-red-600 shadow-sm transition duration-200 hover:border-red-600 hover:bg-red-600 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-1;
+    }
+
+    /* ---------- Formulários ---------- */
+    .label {
+        @apply mb-1.5 block text-sm font-medium text-slate-700;
+    }
+
+    .input {
+        @apply w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm transition placeholder:text-slate-400 focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/25 disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-500;
+    }
+
+    .checkbox {
+        @apply size-4 rounded border-slate-300 text-brand shadow-sm focus:ring-2 focus:ring-brand/25;
+    }
+
+    .error-text {
+        @apply mt-1.5 text-sm text-red-600;
+    }
+
+    .help-text {
+        @apply mt-1.5 text-xs text-slate-500;
+    }
+
+    /* ---------- Tabelas ---------- */
+    .table-modern {
+        @apply min-w-full divide-y divide-slate-200 text-sm;
+    }
+
+    .table-modern thead th {
+        @apply bg-slate-50 px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500;
+    }
+
+    .table-modern tbody {
+        @apply divide-y divide-slate-100;
+    }
+
+    .table-modern tbody td {
+        @apply px-4 py-2.5 text-slate-700;
+    }
+
+    .table-modern tbody tr {
+        @apply transition-colors hover:bg-slate-50;
+    }
+
+    .table-modern tfoot {
+        @apply border-t-2 border-slate-200 bg-slate-50 font-semibold text-slate-900;
+    }
+
+    .table-modern tfoot td,
+    .table-modern tfoot th {
+        @apply px-4 py-2.5;
+    }
+
+    /* ---------- Badges ---------- */
+    .badge {
+        @apply inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium;
+    }
+
+    .badge-success {
+        @apply bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-600/20;
+    }
+
+    .badge-warning {
+        @apply bg-amber-50 text-amber-700 ring-1 ring-inset ring-amber-600/20;
+    }
+
+    .badge-danger {
+        @apply bg-red-50 text-red-700 ring-1 ring-inset ring-red-600/20;
+    }
+
+    .badge-info {
+        @apply bg-sky-50 text-sky-700 ring-1 ring-inset ring-sky-600/20;
+    }
+
+    .badge-neutral {
+        @apply bg-slate-100 text-slate-600 ring-1 ring-inset ring-slate-500/20;
+    }
+
+    /* ---------- Alertas ---------- */
+    .alert {
+        @apply rounded-lg border p-4 text-sm;
+    }
+
+    .alert-success {
+        @apply border-emerald-200 bg-emerald-50 text-emerald-800;
+    }
+
+    .alert-danger {
+        @apply border-red-200 bg-red-50 text-red-800;
+    }
+
+    .alert-warning {
+        @apply border-amber-200 bg-amber-50 text-amber-800;
+    }
+
+    .alert-info {
+        @apply border-sky-200 bg-sky-50 text-sky-800;
+    }
+
+    /* ---------- Modais ---------- */
+    .modal-overlay {
+        @apply fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-sm;
+    }
+
+    .modal-panel {
+        @apply max-h-[calc(100vh-2rem)] w-full max-w-md overflow-y-auto rounded-xl border border-slate-200 bg-white p-6 shadow-xl;
+    }
 }
 
 @layer utilities {

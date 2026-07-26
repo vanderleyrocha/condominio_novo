@@ -1,29 +1,34 @@
 <div>
-    <h1 class="mb-1 text-center text-xl font-semibold">{{ \App\Support\ParametrosCondominio::nomeCondominio() }}</h1>
-    <p class="mb-6 text-center text-sm text-gray-500">Acesso ao sistema</p>
+    <div class="mb-8 text-center">
+        <span class="mx-auto mb-4 flex size-12 items-center justify-center rounded-xl bg-brand text-lg font-bold text-white" aria-hidden="true">
+            {{ mb_strtoupper(mb_substr(\App\Support\ParametrosCondominio::nomeCondominio(), 0, 1)) }}
+        </span>
+        <h1 class="text-xl font-semibold tracking-tight text-slate-900">{{ \App\Support\ParametrosCondominio::nomeCondominio() }}</h1>
+        <p class="mt-1 text-sm text-slate-500">Acesso ao sistema</p>
+    </div>
 
-    <form wire:submit="entrar" class="space-y-4">
+    <form wire:submit="entrar" class="space-y-5">
         <div>
-            <label for="name" class="mb-1 block text-sm font-medium text-gray-700">Usuário</label>
+            <label for="name" class="label">Usuário</label>
             <input id="name" type="text" wire:model="name" autofocus autocomplete="username"
-                   class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand">
-            @error('name') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+                   class="input">
+            @error('name') <p class="error-text">{{ $message }}</p> @enderror
         </div>
 
         <div>
-            <label for="password" class="mb-1 block text-sm font-medium text-gray-700">Senha</label>
+            <label for="password" class="label">Senha</label>
             <input id="password" type="password" wire:model="password" autocomplete="current-password"
-                   class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand">
-            @error('password') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+                   class="input">
+            @error('password') <p class="error-text">{{ $message }}</p> @enderror
         </div>
 
-        <label class="flex items-center gap-2 text-sm text-gray-600">
-            <input type="checkbox" wire:model="remember" class="rounded border-gray-300">
+        <label class="flex items-center gap-2 text-sm text-slate-600">
+            <input type="checkbox" wire:model="remember" class="checkbox">
             Lembrar-me
         </label>
 
         <button type="submit" wire:loading.attr="disabled"
-                class="w-full rounded-md bg-brand px-4 py-2 font-medium text-white transition hover:bg-brand-dark disabled:opacity-50">
+                class="btn btn-primary w-full py-2.5">
             <span wire:loading.remove>Iniciar</span>
             <span wire:loading>Entrando...</span>
         </button>

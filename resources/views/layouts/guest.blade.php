@@ -10,8 +10,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="flex min-h-screen items-center justify-center bg-gray-900 font-sans antialiased">
-    <div class="w-full max-w-md rounded-xl bg-white p-8 shadow-xl">
+<body class="flex min-h-screen items-center justify-center bg-gradient-to-br from-slate-900 via-slate-900 to-blue-950 p-4 font-sans antialiased">
+    <div class="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-8 shadow-2xl">
         {{ $slot }}
     </div>
     @livewireScripts
