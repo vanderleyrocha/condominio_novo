@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Support;
 
+use App\Models\PagamentoNovo;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Facades\DB;
 
@@ -46,11 +47,15 @@ final class ResumoFinanceiroNovo
 
     /**
      * Aplicações de pagamento em taxas CONTABILIZADAS (base dos agregados).
+     * A tabela de pagamentos entra com o alias fixo `pagamentos_novo` (resolvido
+     * pelo Model), então os consumidores sobrevivem ao rename da Fase 5.
      */
     public static function aplicacoesContabilizadas(): Builder
     {
+        $tabelaPagamentos = (new PagamentoNovo)->getTable();
+
         return DB::table('pagamento_taxa')
-            ->join('pagamentos_novo', 'pagamentos_novo.id', '=', 'pagamento_taxa.pagamento_id')
+            ->join("{$tabelaPagamentos} as pagamentos_novo", 'pagamentos_novo.id', '=', 'pagamento_taxa.pagamento_id')
             ->join('taxas_condominiais', 'taxas_condominiais.id', '=', 'pagamento_taxa.taxa_condominial_id')
             ->whereNull('pagamentos_novo.deleted_at')
             ->whereNull('taxas_condominiais.deleted_at')

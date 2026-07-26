@@ -44,8 +44,9 @@ Route::post('/logout', function () {
 })->middleware('auth')->name('logout');
 
 Route::middleware('auth')->group(function () {
-    // Painel inicial = resumo financeiro real (DA-10)
-    Route::get('/', PainelInicial::class)->name('painel');
+    // Painel inicial = resumo financeiro real (DA-10) — CUTOVER: modelo novo
+    Route::get('/', PainelNovo::class)->name('painel');
+    Route::get('/painel-antigo', PainelInicial::class)->name('painel-antigo');
 
     // ===== Modelo novo (Fase 4 da remodelagem) =====
 

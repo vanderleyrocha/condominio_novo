@@ -219,6 +219,33 @@ it('aborta se houver mensalidades duplicadas na origem (proteção N-01)', funct
     $this->artisan('migrar:remodelagem')->assertFailed();
 });
 
+it('cutover executa ETL + validação + remap de papéis, com rollback reversível', function () {
+    semearLegado();
+    DB::table('users')->update(['papel' => 'level_one']);
+
+    $this->artisan('migrar:cutover')->assertSuccessful();
+
+    expect(DB::table('users')->where('papel', 'sindico')->count())->toBe(1)
+        ->and(DB::table('users')->where('papel', 'level_one')->count())->toBe(0);
+
+    // Rollback do remap (parte do plano de rollback do cutover)
+    $this->artisan('migrar:remapear-papeis --reverter')->assertSuccessful();
+    expect(DB::table('users')->where('papel', 'level_one')->count())->toBe(1);
+});
+
+it('cutover aborta sem remapear se o legado tiver duplicatas (validação falha)', function () {
+    semearLegado();
+    DB::table('mensalidades')->insert(['id' => 99, 'imovel_id' => 1, 'mes' => 1, 'ano' => 2024,
+        'vencimento' => '2024-01-10', 'valor' => '100.00', 'desconto' => '0.00', 'acrescimo' => '0.00',
+        'valor_pago' => '0.00', 'pago_em' => null, 'contabilizado' => true,
+        'created_at' => now(), 'updated_at' => now()]);
+
+    $this->artisan('migrar:cutover')->assertFailed();
+
+    // Nada remapeado: papéis intactos
+    expect(DB::table('users')->where('papel', 'sindico')->count())->toBe(0);
+});
+
 it('comando isolado exige destino vazio', function () {
     semearLegado();
 

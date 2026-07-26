@@ -185,18 +185,24 @@ de menor acoplamento, mantendo a suíte verde a cada módulo:
       epic multi-condomínio (hoje há 1 condomínio; `condominio_user` já
       populado pelo ETL).
 
-Cutover:
+Cutover — comando único `migrar:cutover` (ensaiado no banco local em 2026-07:
+ETL final + validação profunda + remap de 16 users level_one → sindico, tudo OK):
 
-- [ ] Modo de manutenção.
-- [ ] Rodar `migrar:remodelagem` final (reconstrução completa a partir do banco
-      de produção atualizado).
-- [ ] Renomear tabelas de pagamento: `RENAME TABLE pagamentos TO pagamentos_legado,
-      pagamentos_novo TO pagamentos` (atômico no MySQL) + renomear a classe
-      `PagamentoNovo` → `Pagamento` (removendo o Model antigo no mesmo commit).
-- [ ] Deploy e smoke test (fluxos críticos + comparação dos golden files).
+- [ ] Modo de manutenção (`php artisan down`).
+- [ ] Deploy desta versão (rota `/` já aponta para o painel novo).
+- [ ] `php artisan migrate` (schema novo) + `php artisan migrar:cutover`
+      (aborta sem remapear se o ETL ou a validação divergirem).
+- [x] ~~Renomear tabelas de pagamento no cutover~~ — MOVIDO para a Fase 5
+      (decisão 2026-07): renomear junto com a remoção do código antigo evita
+      quebrar as telas antigas durante a estabilização e mantém o rollback
+      trivial. Os consumidores do modelo novo usam a tabela via
+      `PagamentoNovo::getTable()` com alias fixo — o rename da Fase 5 é
+      alterar 1 linha no Model + `RENAME TABLE`.
+- [ ] Smoke test (fluxos críticos + comparação dos golden files) e `php artisan up`.
 - [ ] **Rollback definido**: as tabelas antigas coexistem intactas — se o smoke
-      test falhar, reverter o deploy do código; nenhuma reversão de dados é
-      necessária. Só há risco real após o descomissionamento (Fase 5).
+      test falhar, `migrar:remapear-papeis --reverter` + deploy da versão
+      anterior; nenhuma reversão de dados é necessária. Só há risco real após
+      o descomissionamento (Fase 5).
 - [ ] Manter backup do banco antigo por 90 dias.
 
 ## Fase 5 — Descomissionamento
