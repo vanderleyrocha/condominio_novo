@@ -11,6 +11,7 @@ use App\Support\DinheiroBr;
 use DomainException;
 use InvalidArgumentException;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Title;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
 
@@ -19,6 +20,7 @@ use Livewire\Component;
  * de mensalidades no cutover). Persistência via Action LancarTaxas.
  */
 #[Layout('layouts.app')]
+#[Title('Lançamento de taxas')]
 class Lancamento extends Component
 {
     #[Validate('required|integer|min:2000|max:2100')]

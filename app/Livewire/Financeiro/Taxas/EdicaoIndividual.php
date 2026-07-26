@@ -10,6 +10,7 @@ use App\Support\DinheiroBr;
 use Illuminate\Support\Facades\Gate;
 use InvalidArgumentException;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Title;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
 
@@ -20,6 +21,7 @@ use Livewire\Component;
  * módulo de pagamentos ou pela grade anual.
  */
 #[Layout('layouts.app')]
+#[Title('Edição de taxa')]
 class EdicaoIndividual extends Component
 {
     public TaxaCondominial $taxa;

@@ -10,6 +10,7 @@ use App\Models\User;
 use DomainException;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Title;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 
@@ -19,6 +20,7 @@ use Livewire\WithFileUploads;
  * Pendência: requer `php artisan storage:link` para exibir a foto (disk public).
  */
 #[Layout('layouts.app')]
+#[Title('Meu perfil')]
 class Edicao extends Component
 {
     use WithFileUploads;

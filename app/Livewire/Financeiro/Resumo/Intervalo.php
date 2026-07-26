@@ -7,6 +7,7 @@ namespace App\Livewire\Financeiro\Resumo;
 use App\Models\LancamentoFinanceiro;
 use App\Support\ResumoFinanceiro;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
 use Livewire\Component;
 
@@ -15,6 +16,7 @@ use Livewire\Component;
  * contabilizadas no período + lançamentos, com saldo anterior.
  */
 #[Layout('layouts.app')]
+#[Title('Resumo por intervalo')]
 class Intervalo extends Component
 {
     #[Url]

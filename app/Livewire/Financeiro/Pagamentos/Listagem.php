@@ -6,6 +6,7 @@ namespace App\Livewire\Financeiro\Pagamentos;
 
 use App\Models\Pagamento;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Title;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -13,6 +14,7 @@ use Livewire\WithPagination;
  * Listagem de pagamentos no modelo novo: data DESC com paginação.
  */
 #[Layout('layouts.app')]
+#[Title('Pagamentos')]
 class Listagem extends Component
 {
     use WithPagination;

@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Title;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
 
@@ -16,6 +17,7 @@ use Livewire\Component;
  * Login por nome (BR-HUMANA-001 / ADR-001 do legado), reforçado com rate limiting.
  */
 #[Layout('layouts.guest')]
+#[Title('Entrar')]
 class Login extends Component
 {
     #[Validate('required|string')]

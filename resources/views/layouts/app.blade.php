@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>{{ $title ?? \App\Support\ConfiguracoesCondominio::nomeCondominio() }}</title>
+    <title>{{ isset($title) ? $title . ' — ' . \App\Support\ConfiguracoesCondominio::nomeCondominio() : \App\Support\ConfiguracoesCondominio::nomeCondominio() }}</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -50,22 +50,20 @@
 
         <div class="flex min-w-0 flex-1 flex-col">
             {{-- Topbar --}}
-            <header class="sticky top-0 z-30 flex items-center justify-between gap-4 border-b border-slate-200 bg-white/95 px-4 py-3 backdrop-blur sm:px-6">
+            <header class="sticky top-0 z-30 flex items-center justify-between gap-4 border-b border-brand-dark bg-brand/95 px-4 py-3 text-white backdrop-blur sm:px-6">
                 <div class="flex min-w-0 items-center gap-3">
                     <button type="button" @click="menuAberto = true"
-                            class="inline-flex size-10 items-center justify-center rounded-lg text-slate-600 transition hover:bg-slate-100 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand md:hidden"
+                            class="inline-flex size-10 items-center justify-center rounded-lg text-white/80 transition hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white md:hidden"
                             aria-label="Abrir menu de navegação">
-                        <svg class="size-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
-                        </svg>
+                        <x-icon name="bars-3" class="size-6" />
                     </button>
-                    <div class="truncate text-sm font-medium text-slate-500">{{ $header ?? '' }}</div>
+                    <div class="truncate text-sm font-medium text-white/80">{{ $title ?? '' }}</div>
                 </div>
                 <div class="flex shrink-0 items-center gap-2 text-sm sm:gap-4">
                     @auth
                         <a href="{{ route('perfil.edit') }}"
-                           class="inline-flex items-center gap-2 rounded-lg px-2.5 py-1.5 font-medium text-slate-700 transition hover:bg-slate-100 hover:text-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand">
-                            <span class="flex size-7 items-center justify-center rounded-full bg-brand-light text-xs font-semibold text-brand" aria-hidden="true">
+                           class="inline-flex items-center gap-2 rounded-lg px-2.5 py-1.5 font-medium text-white transition hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white">
+                            <span class="flex size-7 items-center justify-center rounded-full bg-white/15 text-xs font-semibold text-white ring-1 ring-white/25" aria-hidden="true">
                                 {{ mb_strtoupper(mb_substr(auth()->user()->name, 0, 1)) }}
                             </span>
                             <span class="hidden sm:inline">{{ auth()->user()->name }}</span>
@@ -73,7 +71,7 @@
                         <form method="POST" action="{{ route('logout') }}">
                             @csrf
                             <button type="submit"
-                                    class="rounded-lg px-2.5 py-1.5 text-slate-500 transition hover:bg-red-50 hover:text-red-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500">
+                                    class="rounded-lg px-2.5 py-1.5 text-white/70 transition hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white">
                                 Sair
                             </button>
                         </form>
@@ -90,6 +88,11 @@
                 @endif
                 {{ $slot }}
             </main>
+
+            <footer class="flex flex-wrap items-center justify-between gap-2 border-t border-slate-200 bg-white px-4 py-3 text-xs text-slate-500 sm:px-6">
+                <span>&copy; {{ date('Y') }} {{ \App\Support\ConfiguracoesCondominio::nomeCondominio() }} — Todos os direitos reservados.</span>
+                <span class="font-medium text-slate-600">{{ $title ?? '' }}</span>
+            </footer>
         </div>
     </div>
     @livewireScripts

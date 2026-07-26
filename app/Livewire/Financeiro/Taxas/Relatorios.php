@@ -8,6 +8,7 @@ use App\Enums\StatusTaxa;
 use App\Models\TaxaCondominial;
 use App\Models\Unidade;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Title;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -18,6 +19,7 @@ use Livewire\WithPagination;
  * do legado; "vencida" é aberto/parcial com vencimento passado.
  */
 #[Layout('layouts.app')]
+#[Title('Relatórios')]
 class Relatorios extends Component
 {
     use WithPagination;

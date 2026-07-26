@@ -8,6 +8,7 @@ use App\Models\TaxaCondominial;
 use App\Models\Unidade;
 use App\Services\CorrecaoMonetariaService;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Title;
 use Livewire\Component;
 
 /**
@@ -15,6 +16,7 @@ use Livewire\Component;
  * grade Jan–Dez por ano com valor corrigido e memória de cálculo expansível.
  */
 #[Layout('layouts.app')]
+#[Title('Inadimplência por unidade')]
 class PorUnidade extends Component
 {
     public Unidade $unidade;

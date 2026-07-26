@@ -15,6 +15,7 @@ use App\Models\UnidadePessoa;
 use DomainException;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Title;
 use Livewire\Component;
 
 /**
@@ -23,6 +24,7 @@ use Livewire\Component;
  * imóveis) e modal de vínculos com histórico de vigência.
  */
 #[Layout('layouts.app')]
+#[Title('Unidades')]
 class Listagem extends Component
 {
     // --- formulário de unidade (inline) ---

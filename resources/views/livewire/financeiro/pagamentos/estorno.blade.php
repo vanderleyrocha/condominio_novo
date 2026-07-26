@@ -16,42 +16,39 @@
 
     <div class="card">
         <h2 class="section-label mb-4">Valores a estornar por taxa</h2>
-        <table class="table-modern">
-            <thead>
+        <x-table>
+            <x-slot:head>
                 <tr>
                     <th>Competência</th>
                     <th class="text-right">Valor pago</th>
                     <th class="text-right">Valor a estornar</th>
                 </tr>
-            </thead>
-            <tbody>
-                @foreach ($pagamento->taxasCondominiais as $taxa)
-                    <tr wire:key="est-taxa-{{ $taxa->id }}">
-                        <td>{{ \App\Support\MesesBr::nome((int) $taxa->competencia_mes) }}/{{ $taxa->competencia_ano }}</td>
-                        <td class="text-right">R$ {{ \App\Support\DinheiroBr::formatar($taxa->pivot->valor_aplicado) }}</td>
-                        <td class="text-right">
-                            <input type="number" step="0.01" min="0" wire:model.live="valores.{{ $taxa->id }}"
-                                   class="input w-28 text-right">
-                            @error("valores.{$taxa->id}") <p class="error-text text-xs">{{ $message }}</p> @enderror
-                        </td>
-                    </tr>
-                @endforeach
-            </tbody>
-            <tfoot>
+            </x-slot:head>
+            @foreach ($pagamento->taxasCondominiais as $taxa)
+                <tr wire:key="est-taxa-{{ $taxa->id }}">
+                    <td>{{ \App\Support\MesesBr::nome((int) $taxa->competencia_mes) }}/{{ $taxa->competencia_ano }}</td>
+                    <td class="text-right">R$ {{ \App\Support\DinheiroBr::formatar($taxa->pivot->valor_aplicado) }}</td>
+                    <td class="text-right">
+                        <input type="number" step="0.01" min="0" wire:model.live="valores.{{ $taxa->id }}"
+                               class="input w-28 text-right">
+                        @error("valores.{$taxa->id}") <p class="error-text text-xs">{{ $message }}</p> @enderror
+                    </td>
+                </tr>
+            @endforeach
+            <x-slot:foot>
                 <tr class="font-semibold">
                     <th colspan="2" class="text-left">Total a estornar</th>
                     <th class="text-right">R$ {{ \App\Support\DinheiroBr::formatar($this->totalAEstornar) }}</th>
                 </tr>
-            </tfoot>
-        </table>
+            </x-slot:foot>
+        </x-table>
     </div>
 
     <div class="flex items-center gap-3">
-        <button type="button" wire:click="confirmar" wire:loading.attr="disabled"
-                wire:confirm="Confirmar o estorno deste pagamento?"
-                class="btn btn-danger">
+        <x-button variant="danger" wire:click="confirmar" wire:loading.attr="disabled"
+                  wire:confirm="Confirmar o estorno deste pagamento?">
             Confirmar estorno
-        </button>
+        </x-button>
         <a href="{{ route('pagamentos.show', $pagamento) }}" class="text-sm text-slate-500 hover:underline">Cancelar</a>
     </div>
 </div>

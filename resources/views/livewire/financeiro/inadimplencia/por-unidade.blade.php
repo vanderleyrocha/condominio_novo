@@ -5,8 +5,7 @@
                 Inadimplência da unidade {{ $unidade->identificacao }}
                 - {{ $unidade->vinculos->first()?->pessoa->nome ?? 'Não informado' }} (valores sem correção)
             </h2>
-            <a href="{{ route('pdf.inadimplencia.unidade', $unidade) }}" target="_blank"
-               class="btn btn-primary">Download</a>
+            <x-button :href="route('pdf.inadimplencia.unidade', $unidade)" target="_blank">Download</x-button>
         </div>
 
         <table class="table-modern">

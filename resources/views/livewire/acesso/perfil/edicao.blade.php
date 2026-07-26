@@ -5,18 +5,9 @@
             <h1 class="page-title mb-4">Meus dados</h1>
 
             <form wire:submit="gravar" class="space-y-4">
-                <div>
-                    <label class="label">Nome</label>
-                    <input type="text" value="{{ $usuario->name }}" disabled
-                           class="input bg-slate-50 text-slate-500">
-                </div>
+                <x-input label="Nome" :value="$usuario->name" disabled class="bg-slate-50 text-slate-500" />
 
-                <div>
-                    <label for="email" class="label">Email</label>
-                    <input id="email" type="email" wire:model="email" placeholder="Email"
-                           class="input">
-                    @error('email') <p class="error-text">{{ $message }}</p> @enderror
-                </div>
+                <x-input label="Email" type="email" wire:model="email" placeholder="Email" />
 
                 <div>
                     <label for="foto" class="label">Foto de perfil</label>
@@ -31,10 +22,7 @@
                 </div>
 
                 <div class="flex justify-end">
-                    <button type="submit" wire:loading.attr="disabled"
-                            class="btn btn-primary">
-                        Gravar
-                    </button>
+                    <x-button type="submit" wire:loading.attr="disabled">Gravar</x-button>
                 </div>
             </form>
         </div>
@@ -44,31 +32,17 @@
             <h2 class="mb-4 text-lg font-semibold">Senha</h2>
 
             <form wire:submit="alterarSenha" class="space-y-4">
-                <div>
-                    <label for="senha_atual" class="label">Senha atual</label>
-                    <input id="senha_atual" type="password" wire:model="senha_atual" placeholder="Senha atual" autocomplete="current-password"
-                           class="input">
-                    @error('senha_atual') <p class="error-text">{{ $message }}</p> @enderror
-                </div>
+                <x-input label="Senha atual" type="password" wire:model="senha_atual"
+                         placeholder="Senha atual" autocomplete="current-password" />
 
-                <div>
-                    <label for="nova_senha" class="label">Nova senha</label>
-                    <input id="nova_senha" type="password" wire:model="nova_senha" placeholder="Nova senha" autocomplete="new-password"
-                           class="input">
-                    @error('nova_senha') <p class="error-text">{{ $message }}</p> @enderror
-                </div>
+                <x-input label="Nova senha" type="password" wire:model="nova_senha"
+                         placeholder="Nova senha" autocomplete="new-password" />
 
-                <div>
-                    <label for="nova_senha_confirmation" class="label">Confirme a nova senha</label>
-                    <input id="nova_senha_confirmation" type="password" wire:model="nova_senha_confirmation" placeholder="Confirme a nova senha" autocomplete="new-password"
-                           class="input">
-                </div>
+                <x-input label="Confirme a nova senha" type="password" wire:model="nova_senha_confirmation"
+                         placeholder="Confirme a nova senha" autocomplete="new-password" />
 
                 <div class="flex justify-end">
-                    <button type="submit" wire:loading.attr="disabled"
-                            class="btn btn-primary">
-                        Alterar a senha
-                    </button>
+                    <x-button type="submit" wire:loading.attr="disabled">Alterar a senha</x-button>
                 </div>
             </form>
         </div>

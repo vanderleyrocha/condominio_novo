@@ -11,6 +11,7 @@ use App\Models\Configuracao;
 use App\Models\LancamentoFinanceiro;
 use App\Support\DinheiroBr;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Title;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
 
@@ -21,6 +22,7 @@ use Livewire\Component;
  * cobrança (pivot de taxas + lançamentos de receita com origem na cobrança).
  */
 #[Layout('layouts.app')]
+#[Title('Cobranças extraordinárias')]
 class Gestao extends Component
 {
     public bool $formAberto = false;

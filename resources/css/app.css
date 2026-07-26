@@ -217,8 +217,9 @@
         @apply fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-sm;
     }
 
+    /* A largura máxima é definida pelo componente <x-modal> (prop maxWidth). */
     .modal-panel {
-        @apply max-h-[calc(100vh-2rem)] w-full max-w-md overflow-y-auto rounded-xl border border-slate-200 bg-white p-6 shadow-xl;
+        @apply max-h-[calc(100vh-2rem)] w-full overflow-y-auto rounded-xl border border-slate-200 bg-white p-6 shadow-xl;
     }
 }
 

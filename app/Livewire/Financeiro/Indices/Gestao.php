@@ -10,6 +10,7 @@ use App\Models\IndiceEconomico;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -20,6 +21,7 @@ use Livewire\WithPagination;
  * (tipo, ano, mes) no banco. Restrito a admin (dado global).
  */
 #[Layout('layouts.app')]
+#[Title('Índices econômicos')]
 class Gestao extends Component
 {
     use WithPagination;

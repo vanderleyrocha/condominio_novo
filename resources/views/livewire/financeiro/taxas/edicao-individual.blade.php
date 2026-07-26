@@ -13,29 +13,13 @@
         </div>
 
         <form wire:submit="salvar" class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <div>
-                <label for="vencimento" class="label">Data de vencimento</label>
-                <input id="vencimento" type="date" wire:model="vencimento" class="input">
-                @error('vencimento') <p class="error-text">{{ $message }}</p> @enderror
-            </div>
+            <x-input label="Data de vencimento" type="date" wire:model="vencimento" />
 
-            <div>
-                <label for="valorOriginal" class="label">Valor devido</label>
-                <input id="valorOriginal" type="text" wire:model="valorOriginal" inputmode="decimal" placeholder="0,00" class="input">
-                @error('valorOriginal') <p class="error-text">{{ $message }}</p> @enderror
-            </div>
+            <x-input label="Valor devido" wire:model="valorOriginal" inputmode="decimal" placeholder="0,00" />
 
-            <div>
-                <label for="acrescimo" class="label">Acréscimo</label>
-                <input id="acrescimo" type="text" wire:model="acrescimo" inputmode="decimal" placeholder="0,00" class="input">
-                @error('acrescimo') <p class="error-text">{{ $message }}</p> @enderror
-            </div>
+            <x-input label="Acréscimo" wire:model="acrescimo" inputmode="decimal" placeholder="0,00" />
 
-            <div>
-                <label for="desconto" class="label">Desconto</label>
-                <input id="desconto" type="text" wire:model="desconto" inputmode="decimal" placeholder="0,00" class="input">
-                @error('desconto') <p class="error-text">{{ $message }}</p> @enderror
-            </div>
+            <x-input label="Desconto" wire:model="desconto" inputmode="decimal" placeholder="0,00" />
 
             <div class="sm:col-span-2 rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm">
                 <span class="font-medium text-slate-700">Valor pago (derivado dos pagamentos):</span>
@@ -61,14 +45,12 @@
             </div>
 
             <div class="flex items-center gap-3 sm:col-span-2">
-                <button type="submit" wire:loading.attr="disabled" class="btn btn-primary">
+                <x-button type="submit" wire:loading.attr="disabled">
                     <span wire:loading.remove>Salvar</span>
                     <span wire:loading>Salvando...</span>
-                </button>
+                </x-button>
                 @if ((float) $valorPago > 0)
-                    <a href="{{ route('pdf.taxas.recibo', $taxa) }}" target="_blank" class="btn btn-secondary">
-                        Recibo
-                    </a>
+                    <x-button variant="secondary" :href="route('pdf.taxas.recibo', $taxa)" target="_blank">Recibo</x-button>
                 @endif
                 <a href="{{ route('taxas.index', ['ano' => $taxa->competencia_ano, 'unidade' => $taxa->unidade_id]) }}"
                    class="text-sm text-slate-500 hover:underline">Voltar</a>

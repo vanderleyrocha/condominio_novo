@@ -10,6 +10,7 @@ use App\Models\Pessoa;
 use App\Rules\CpfOuCnpj;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Title;
 use Livewire\Component;
 
 /**
@@ -18,6 +19,7 @@ use Livewire\Component;
  * informado valida DV de CPF ou CNPJ e unicidade.
  */
 #[Layout('layouts.app')]
+#[Title('Cadastro de pessoa')]
 class Formulario extends Component
 {
     public ?Pessoa $pessoa = null;

@@ -9,6 +9,7 @@ use App\Models\Pagamento;
 use DomainException;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Title;
 use Livewire\Component;
 
 /**
@@ -16,6 +17,7 @@ use Livewire\Component;
  * vivem na Action EstornarPagamento.
  */
 #[Layout('layouts.app')]
+#[Title('Estorno de pagamento')]
 class Estorno extends Component
 {
     public Pagamento $pagamento;

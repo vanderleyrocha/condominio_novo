@@ -6,6 +6,7 @@ namespace App\Livewire\Acesso\Usuarios;
 
 use App\Models\User;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Title;
 use Livewire\Component;
 
 /**
@@ -13,6 +14,7 @@ use Livewire\Component;
  * renderizado com agrupamento válido por usuário (DEV-14).
  */
 #[Layout('layouts.app')]
+#[Title('Log de acessos')]
 class LogAcessos extends Component
 {
     public function render()

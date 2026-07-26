@@ -6,6 +6,7 @@ namespace App\Livewire\Financeiro\Pagamentos;
 
 use App\Models\Pagamento;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Title;
 use Livewire\Component;
 
 /**
@@ -13,6 +14,7 @@ use Livewire\Component;
  * (oculto quando estornado — DEV-09/BR-HUMANA-006).
  */
 #[Layout('layouts.app')]
+#[Title('Detalhe do pagamento')]
 class Detalhe extends Component
 {
     public Pagamento $pagamento;

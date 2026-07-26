@@ -9,6 +9,7 @@ use App\Models\Pagamento;
 use App\Models\TaxaCondominial;
 use App\Support\ResumoFinanceiro;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Title;
 use Livewire\Component;
 
 /**
@@ -16,6 +17,7 @@ use Livewire\Component;
  * cutover) — mesmos agregados via ResumoFinanceiro.
  */
 #[Layout('layouts.app')]
+#[Title('Painel')]
 class PainelInicial extends Component
 {
     public function render()

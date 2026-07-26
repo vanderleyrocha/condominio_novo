@@ -1,10 +1,7 @@
 <div class="space-y-4">
-    <div class="flex flex-wrap items-center justify-between gap-3">
-        <h1 class="page-title">Grade Anual — {{ $ano }}</h1>
-        <button type="button" wire:click="gravar" wire:loading.attr="disabled" class="btn btn-primary">
-            Gravar
-        </button>
-    </div>
+    <x-page-header title="Grade Anual — {{ $ano }}">
+        <x-button wire:click="gravar" wire:loading.attr="disabled">Gravar</x-button>
+    </x-page-header>
 
     <p class="text-xs text-slate-500">
         A célula mostra o total pago da taxa. Alterar o valor gera um pagamento (aumento)

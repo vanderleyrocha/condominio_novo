@@ -13,6 +13,7 @@ use App\Models\LancamentoFinanceiro;
 use App\Models\PlanoConta;
 use App\Support\DinheiroBr;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
@@ -24,6 +25,7 @@ use Livewire\WithPagination;
  * plano de contas e descrição. Criação/edição inline; sem exclusão (RN-29).
  */
 #[Layout('layouts.app')]
+#[Title('Lançamentos')]
 class Listagem extends Component
 {
     use WithPagination;

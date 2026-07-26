@@ -28,45 +28,43 @@
 
     <div class="card">
         <h2 class="section-label mb-4">Taxas quitadas por este pagamento</h2>
-        <table class="table-modern">
-            <thead>
+        <x-table>
+            <x-slot:head>
                 <tr>
                     <th>Competência</th>
                     <th>Vencimento</th>
                     <th class="text-right">Valor aplicado</th>
                 </tr>
-            </thead>
-            <tbody>
-                @forelse ($pagamento->taxasCondominiais as $taxa)
-                    <tr wire:key="det-taxa-{{ $taxa->id }}">
-                        <td>{{ \App\Support\MesesBr::nome((int) $taxa->competencia_mes) }}/{{ $taxa->competencia_ano }}</td>
-                        <td>{{ $taxa->vencimento?->format('d/m/Y') ?? '-' }}</td>
-                        <td class="text-right">R$ {{ \App\Support\DinheiroBr::formatar($taxa->pivot->valor_aplicado) }}</td>
-                    </tr>
-                @empty
-                    <tr>
-                        <td colspan="3" class="py-4 text-center text-slate-500">Nenhuma taxa vinculada (pagamento avulso).</td>
-                    </tr>
-                @endforelse
-            </tbody>
+            </x-slot:head>
+            @forelse ($pagamento->taxasCondominiais as $taxa)
+                <tr wire:key="det-taxa-{{ $taxa->id }}">
+                    <td>{{ \App\Support\MesesBr::nome((int) $taxa->competencia_mes) }}/{{ $taxa->competencia_ano }}</td>
+                    <td>{{ $taxa->vencimento?->format('d/m/Y') ?? '-' }}</td>
+                    <td class="text-right">R$ {{ \App\Support\DinheiroBr::formatar($taxa->pivot->valor_aplicado) }}</td>
+                </tr>
+            @empty
+                <tr>
+                    <td colspan="3" class="py-4 text-center text-slate-500">Nenhuma taxa vinculada (pagamento avulso).</td>
+                </tr>
+            @endforelse
             @if ($pagamento->taxasCondominiais->isNotEmpty())
-                <tfoot>
+                <x-slot:foot>
                     <tr class="font-semibold">
                         <th colspan="2" class="text-left">Total aplicado</th>
                         <th class="text-right">R$ {{ \App\Support\DinheiroBr::formatar($totalAplicado) }}</th>
                     </tr>
-                </tfoot>
+                </x-slot:foot>
             @endif
-        </table>
+        </x-table>
     </div>
 
     <div class="flex items-center gap-3">
         @can('emitirRecibo', $pagamento)
-            <a href="{{ route('pdf.pagamentos.recibo', $pagamento) }}" target="_blank" class="btn btn-secondary">Recibo</a>
+            <x-button variant="secondary" :href="route('pdf.pagamentos.recibo', $pagamento)" target="_blank">Recibo</x-button>
         @endcan
         @can('estornar', $pagamento)
             @if (! $pagamento->isEstorno() && $pagamento->estornos->isEmpty())
-                <a href="{{ route('pagamentos.estorno', $pagamento) }}" class="btn btn-danger">Estornar</a>
+                <x-button variant="danger" :href="route('pagamentos.estorno', $pagamento)">Estornar</x-button>
             @endif
         @endcan
         <a href="{{ route('pagamentos.index') }}" class="text-sm text-slate-500 hover:underline">Voltar</a>

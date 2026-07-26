@@ -12,12 +12,14 @@ use App\Models\User;
 use DomainException;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Title;
 use Livewire\Component;
 
 /**
  * Gestão de usuários — funcionalidade nova (decisão P4), admin-only via UserPolicy.
  */
 #[Layout('layouts.app')]
+#[Title('Usuários')]
 class Listagem extends Component
 {
     public bool $exibirFormulario = false;

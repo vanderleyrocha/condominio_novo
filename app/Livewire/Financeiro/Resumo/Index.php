@@ -9,6 +9,7 @@ use App\Models\LancamentoFinanceiro;
 use App\Models\Unidade;
 use App\Support\ResumoFinanceiro;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
 use Livewire\Component;
 
@@ -18,12 +19,21 @@ use Livewire\Component;
  * contabilizadas, agrupados pelo ano do pagamento, + receitas − despesas.
  */
 #[Layout('layouts.app')]
+#[Title('Resumo financeiro')]
 class Index extends Component
 {
     #[Url(as: 'apartir_de')]
     public string $apartirDe = '';
 
-    public function render()
+    public function updatedApartirDe(): void
+    {
+        $this->dispatch('resumo-grafico-atualizado', dados: $this->montarResumo()['graficoDados']);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function montarResumo(): array
     {
         $temFiltro = $this->apartirDe !== '';
 
@@ -74,6 +84,20 @@ class Index extends Component
             $totalGeral += (float) $valor;
         }
 
+        // Série anual para o gráfico: receitas = taxas do ano + outras receitas.
+        $graficoDados = ['anos' => [], 'receitas' => [], 'despesas' => []];
+
+        foreach ($resumo as $ano => $dados) {
+            $receitasAno = (float) ($dados['receita'] ?? 0);
+            foreach ($unidades as $unidade) {
+                $receitasAno += (float) ($dados[$unidade] ?? 0);
+            }
+
+            $graficoDados['anos'][] = (string) $ano;
+            $graficoDados['receitas'][] = round($receitasAno, 2);
+            $graficoDados['despesas'][] = round((float) ($dados['despesas'] ?? 0), 2);
+        }
+
         // Apuração de cobranças extraordinárias: pivot de taxas + receitas com origem
         $cobrancas = CobrancaExtraordinaria::query()
             ->withSum('taxasCondominiais as total_taxas', 'cobranca_extraordinaria_taxa.valor')
@@ -86,7 +110,7 @@ class Index extends Component
             ->groupBy('origem_id')
             ->pluck('total', 'origem_id');
 
-        return view('livewire.financeiro.resumo.index', [
+        return [
             'unidades' => $unidades,
             'resumo' => $resumo,
             'totalUnidade' => $totalUnidade,
@@ -94,8 +118,16 @@ class Index extends Component
             'totalReceita' => $totalReceita,
             'totalDespesa' => $totalDespesa,
             'totalGeral' => $totalGeral,
+            'totalReceitas' => $totalGeral + $totalReceita,
+            'saldoFinal' => $totalGeral + $totalReceita - $totalDespesa + $saldo,
+            'graficoDados' => $graficoDados,
             'cobrancas' => $cobrancas,
             'receitasPorCobranca' => $receitasPorCobranca,
-        ]);
+        ];
+    }
+
+    public function render()
+    {
+        return view('livewire.financeiro.resumo.index', $this->montarResumo());
     }
 }

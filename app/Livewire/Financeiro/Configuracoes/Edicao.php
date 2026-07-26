@@ -10,6 +10,7 @@ use App\Support\ConfiguracoesCondominio;
 use App\Support\DinheiroBr;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Title;
 use Livewire\Component;
 
 /**
@@ -19,6 +20,7 @@ use Livewire\Component;
  * (level_one) não existe mais — regra aposentada com o novo controle de acesso.
  */
 #[Layout('layouts.app')]
+#[Title('Configurações')]
 class Edicao extends Component
 {
     public string $nomeCondominio = '';

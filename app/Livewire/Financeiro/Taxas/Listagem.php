@@ -7,6 +7,7 @@ namespace App\Livewire\Financeiro\Taxas;
 use App\Models\TaxaCondominial;
 use App\Models\Unidade;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -17,6 +18,7 @@ use Livewire\WithPagination;
  * de pagamento_taxa; a data do pagamento é a do último pagamento aplicado.
  */
 #[Layout('layouts.app')]
+#[Title('Taxas')]
 class Listagem extends Component
 {
     use WithPagination;

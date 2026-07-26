@@ -8,29 +8,18 @@
     </div>
 
     <form wire:submit="entrar" class="space-y-5">
-        <div>
-            <label for="name" class="label">Usuário</label>
-            <input id="name" type="text" wire:model="name" autofocus autocomplete="username"
-                   class="input">
-            @error('name') <p class="error-text">{{ $message }}</p> @enderror
-        </div>
+        <x-input label="Usuário" wire:model="name" autofocus autocomplete="username" />
 
-        <div>
-            <label for="password" class="label">Senha</label>
-            <input id="password" type="password" wire:model="password" autocomplete="current-password"
-                   class="input">
-            @error('password') <p class="error-text">{{ $message }}</p> @enderror
-        </div>
+        <x-input label="Senha" type="password" wire:model="password" autocomplete="current-password" />
 
         <label class="flex items-center gap-2 text-sm text-slate-600">
             <input type="checkbox" wire:model="remember" class="checkbox">
             Lembrar-me
         </label>
 
-        <button type="submit" wire:loading.attr="disabled"
-                class="btn btn-primary w-full py-2.5">
+        <x-button type="submit" wire:loading.attr="disabled" class="w-full py-2.5">
             <span wire:loading.remove>Iniciar</span>
             <span wire:loading>Entrando...</span>
-        </button>
+        </x-button>
     </form>
 </div>

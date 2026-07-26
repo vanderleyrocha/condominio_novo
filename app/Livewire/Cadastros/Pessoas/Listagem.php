@@ -8,6 +8,7 @@ use App\Actions\Cadastros\ExcluirPessoa;
 use App\Models\Pessoa;
 use DomainException;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -17,6 +18,7 @@ use Livewire\WithPagination;
  * Ordenação por nome, paginação 15, busca por nome/documento.
  */
 #[Layout('layouts.app')]
+#[Title('Pessoas')]
 class Listagem extends Component
 {
     use WithPagination;

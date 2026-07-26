@@ -7,6 +7,7 @@ namespace App\Livewire\Financeiro\Inadimplencia;
 use App\Models\TaxaCondominial;
 use App\Services\CorrecaoMonetariaService;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Title;
 use Livewire\Component;
 
 /**
@@ -15,6 +16,7 @@ use Livewire\Component;
  * Mesma lógica de DividaController::index do legado.
  */
 #[Layout('layouts.app')]
+#[Title('Inadimplência')]
 class Listagem extends Component
 {
     public function render(CorrecaoMonetariaService $correcao)

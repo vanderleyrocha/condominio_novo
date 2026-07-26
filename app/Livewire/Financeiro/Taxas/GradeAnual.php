@@ -10,6 +10,7 @@ use DomainException;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Collection;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Title;
 use Livewire\Component;
 
 /**
@@ -18,6 +19,7 @@ use Livewire\Component;
  * PagarViaGrade (delta positivo = pagamento; negativo = ajuste).
  */
 #[Layout('layouts.app')]
+#[Title('Grade anual')]
 class GradeAnual extends Component
 {
     public int $ano;

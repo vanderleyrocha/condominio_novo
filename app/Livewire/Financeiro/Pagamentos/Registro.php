@@ -17,6 +17,7 @@ use Illuminate\Support\Collection;
 use InvalidArgumentException;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Title;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
 
@@ -27,6 +28,7 @@ use Livewire\Component;
  * idêntica ao legado; persistência via RegistrarPagamento.
  */
 #[Layout('layouts.app')]
+#[Title('Registro de pagamento')]
 class Registro extends Component
 {
     #[Validate('required|date')]
