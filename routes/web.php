@@ -13,6 +13,7 @@ use App\Livewire\Financeiro\Pagamentos\Detalhe;
 use App\Livewire\Financeiro\Pagamentos\Estorno;
 use App\Livewire\Financeiro\Pagamentos\Registro;
 use App\Livewire\Financeiro\PainelInicial;
+use App\Livewire\Financeiro\Relatorios\PorFinalidade;
 use App\Livewire\Financeiro\Resumo\Index;
 use App\Livewire\Financeiro\Resumo\Intervalo;
 use App\Livewire\Financeiro\Taxas\EdicaoIndividual;
@@ -51,6 +52,11 @@ Route::middleware('auth')->group(function () {
     Route::get('/taxas/{taxa}/editar', EdicaoIndividual::class)->name('taxas.edit');
     Route::get('/taxas/grade/{ano}', GradeAnual::class)->name('taxas.grade');
     Route::get('/taxas/relatorios', Relatorios::class)->name('taxas.relatorios');
+
+    // Financeiro — Finalidades (destinação da arrecadação; 05-plano-composicao-taxas.md)
+    Route::get('/finalidades', App\Livewire\Financeiro\Finalidades\Gestao::class)->name('finalidades.index');
+    Route::get('/relatorios/por-finalidade', PorFinalidade::class)
+        ->name('relatorios.por-finalidade');
 
     // Financeiro — Pagamentos
     Route::get('/pagamentos', App\Livewire\Financeiro\Pagamentos\Listagem::class)->name('pagamentos.index');
