@@ -25,19 +25,110 @@
             <x-slot:footer>Lançamentos de despesa do período</x-slot:footer>
         </x-stat-card>
 
-        <x-stat-card label="Saldo final" icon="banknotes" tone="brand">
-            <span class="{{ $saldoFinal < 0 ? 'text-red-600' : 'text-slate-900' }}">
-                R$ {{ \App\Support\DinheiroBr::formatar($saldoFinal) }}
-            </span>
-            <x-slot:footer>
-                @if ($saldo != 0)
-                    {{ \App\Support\DinheiroBr::formatar($saldo) }} + {{ \App\Support\DinheiroBr::formatar($totalReceitas - $totalDespesa) }} = {{ \App\Support\DinheiroBr::formatar($saldoFinal) }}
-                @else
-                    Receitas − despesas do período
-                @endif
-            </x-slot:footer>
-        </x-stat-card>
+        @if ($saldoVinculado > 0)
+            <x-stat-card label="Disponível para custeio" icon="banknotes" tone="brand">
+                <span class="{{ $disponivelCusteio < 0 ? 'text-red-600' : 'text-slate-900' }}">
+                    R$ {{ \App\Support\DinheiroBr::formatar($disponivelCusteio) }}
+                </span>
+                <x-slot:footer>
+                    Saldo final de {{ \App\Support\DinheiroBr::formatar($saldoFinal) }}
+                    − {{ \App\Support\DinheiroBr::formatar($saldoVinculado) }} vinculado a finalidades
+                </x-slot:footer>
+            </x-stat-card>
+        @else
+            <x-stat-card label="Saldo final" icon="banknotes" tone="brand">
+                <span class="{{ $saldoFinal < 0 ? 'text-red-600' : 'text-slate-900' }}">
+                    R$ {{ \App\Support\DinheiroBr::formatar($saldoFinal) }}
+                </span>
+                <x-slot:footer>
+                    @if ($saldo != 0)
+                        {{ \App\Support\DinheiroBr::formatar($saldo) }} + {{ \App\Support\DinheiroBr::formatar($totalReceitas - $totalDespesa) }} = {{ \App\Support\DinheiroBr::formatar($saldoFinal) }}
+                    @else
+                        Receitas − despesas do período
+                    @endif
+                </x-slot:footer>
+            </x-stat-card>
+        @endif
     </div>
+
+    {{-- Segregação do saldo: o que é carimbado não custeia despesa corrente --}}
+    @if ($vinculadas->isNotEmpty())
+        <div class="card">
+            <h2 class="card-title mb-4">Recursos vinculados a finalidades</h2>
+
+            <dl class="mb-5 max-w-md space-y-1 text-sm">
+                <div class="flex justify-between gap-4">
+                    <dt class="text-slate-600">Saldo final em caixa</dt>
+                    <dd class="tabular-nums">R$ {{ \App\Support\DinheiroBr::formatar($saldoFinal) }}</dd>
+                </div>
+                <div class="flex justify-between gap-4">
+                    <dt class="text-slate-600">(−) Vinculado a finalidades</dt>
+                    <dd class="tabular-nums text-amber-600">R$ {{ \App\Support\DinheiroBr::formatar($saldoVinculado) }}</dd>
+                </div>
+                <div class="flex justify-between gap-4 border-t border-slate-200 pt-1 font-semibold">
+                    <dt>(=) Disponível para custeio ordinário</dt>
+                    <dd class="tabular-nums {{ $disponivelCusteio < 0 ? 'text-red-600' : 'text-emerald-600' }}">
+                        R$ {{ \App\Support\DinheiroBr::formatar($disponivelCusteio) }}
+                    </dd>
+                </div>
+            </dl>
+
+            @if ($disponivelCusteio < 0)
+                <div class="alert alert-warning mb-4 text-sm">
+                    O custeio corrente está usando
+                    <strong>R$ {{ \App\Support\DinheiroBr::formatar(abs($disponivelCusteio)) }}</strong>
+                    de recursos vinculados — dinheiro arrecadado para uma finalidade específica está
+                    pagando despesa ordinária.
+                </div>
+            @endif
+
+            <x-table>
+                <x-slot:head>
+                    <tr>
+                        <th>Finalidade</th>
+                        <th class="text-right">Arrecadado</th>
+                        <th class="text-right">Gasto</th>
+                        <th class="text-right">Saldo do fundo</th>
+                        <th class="text-right">Meta</th>
+                    </tr>
+                </x-slot:head>
+                @foreach ($vinculadas as $linha)
+                    @php
+                        $meta = $linha['finalidade']->meta_valor;
+                    @endphp
+                    <tr wire:key="resumo-vinculada-{{ $linha['finalidade']->id }}">
+                        <td>
+                            {{ $linha['finalidade']->nome }}
+                            @if ($linha['a_receber'] > 0)
+                                <p class="text-xs text-slate-500">
+                                    A receber: R$ {{ \App\Support\DinheiroBr::formatar($linha['a_receber']) }}
+                                </p>
+                            @endif
+                        </td>
+                        <td class="text-right tabular-nums">R$ {{ \App\Support\DinheiroBr::formatar($linha['arrecadado']) }}</td>
+                        <td class="text-right tabular-nums">R$ {{ \App\Support\DinheiroBr::formatar($linha['gasto']) }}</td>
+                        <td class="text-right font-semibold tabular-nums">R$ {{ \App\Support\DinheiroBr::formatar($linha['saldo']) }}</td>
+                        <td class="text-right tabular-nums">
+                            @if ($meta === null)
+                                —
+                            @else
+                                R$ {{ \App\Support\DinheiroBr::formatar($meta) }}
+                                <span class="block text-xs text-slate-500">
+                                    {{ (float) $meta > 0 ? round(100 * (float) $linha['arrecadado'] / (float) $meta).'% arrecadado' : '' }}
+                                </span>
+                            @endif
+                        </td>
+                    </tr>
+                @endforeach
+            </x-table>
+
+            <p class="mt-4 text-sm text-slate-500">
+                O saldo destas finalidades está no caixa, mas é dinheiro carimbado: não deve custear
+                despesas correntes de manutenção e administração. Marque uma finalidade como vinculada
+                em <a href="{{ route('finalidades.index') }}" class="text-brand underline">Finalidades</a>.
+            </p>
+        </div>
+    @endif
 
     {{-- Gráfico receitas × despesas por ano --}}
     <div class="card">
@@ -47,66 +138,6 @@
              class="h-72">
             <canvas x-ref="canvas" role="img" aria-label="Gráfico de barras de receitas e despesas por ano"></canvas>
         </div>
-    </div>
-
-    {{-- Matriz ano × unidades --}}
-    <div class="card">
-        <h2 class="card-title mb-4">Resumo das receitas e despesas</h2>
-        <x-table>
-            <x-slot:head>
-                <tr>
-                    <th rowspan="2" class="sticky left-0 z-10 bg-slate-50 text-left">Ano</th>
-                    <th colspan="{{ count($unidades) + 2 }}" class="text-center">Receitas</th>
-                    <th rowspan="2" class="text-right">Despesas</th>
-                </tr>
-                <tr>
-                    @foreach ($unidades as $unidade)
-                        <th class="text-right">{{ $unidade }}</th>
-                    @endforeach
-                    <th class="text-right">Outras</th>
-                    <th class="text-right">Total</th>
-                </tr>
-            </x-slot:head>
-            @forelse ($resumo as $ano => $dados)
-                @php $totalAno = 0; @endphp
-                <tr wire:key="resumo-{{ $ano }}">
-                    <th class="sticky left-0 z-10 bg-white px-4 text-left">{{ $ano }}</th>
-                    @foreach ($unidades as $unidade)
-                        <td class="text-right tabular-nums">
-                            {{ (isset($dados[$unidade]) && $dados[$unidade] > 0) ? \App\Support\DinheiroBr::formatar($dados[$unidade]) : '-' }}
-                        </td>
-                        @php $totalAno += $dados[$unidade] ?? 0; @endphp
-                    @endforeach
-                    <td class="text-right tabular-nums">
-                        {{ (isset($dados['receita']) && $dados['receita'] > 0) ? \App\Support\DinheiroBr::formatar($dados['receita']) : '-' }}
-                    </td>
-                    @php $totalAno += $dados['receita'] ?? 0; @endphp
-                    <td class="text-right font-medium tabular-nums">{{ \App\Support\DinheiroBr::formatar($totalAno) }}</td>
-                    <td class="text-right tabular-nums">
-                        {{ (isset($dados['despesas']) && $dados['despesas'] > 0) ? \App\Support\DinheiroBr::formatar($dados['despesas']) : '-' }}
-                    </td>
-                </tr>
-            @empty
-                <tr>
-                    <td colspan="{{ count($unidades) + 4 }}" class="py-6 text-center text-slate-500">
-                        Nenhum movimento encontrado para o período.
-                    </td>
-                </tr>
-            @endforelse
-            <x-slot:foot>
-                <tr class="font-semibold">
-                    <th class="sticky left-0 z-10 bg-slate-50 text-left">Total</th>
-                    @foreach ($unidades as $unidade)
-                        <th class="text-right tabular-nums">
-                            {{ (isset($totalUnidade[$unidade]) && $totalUnidade[$unidade] > 0) ? \App\Support\DinheiroBr::formatar($totalUnidade[$unidade]) : '-' }}
-                        </th>
-                    @endforeach
-                    <th class="text-right tabular-nums">{{ \App\Support\DinheiroBr::formatar($totalReceita) }}</th>
-                    <th class="text-right tabular-nums">{{ \App\Support\DinheiroBr::formatar($totalReceitas) }}</th>
-                    <th class="text-right tabular-nums">{{ \App\Support\DinheiroBr::formatar($totalDespesa) }}</th>
-                </tr>
-            </x-slot:foot>
-        </x-table>
     </div>
 
     {{-- Cobranças extraordinárias --}}

@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace App\Livewire\Financeiro\Resumo;
 
+use App\Enums\NaturezaLancamento;
 use App\Models\CobrancaExtraordinaria;
 use App\Models\LancamentoFinanceiro;
 use App\Models\Unidade;
+use App\Services\RateioPorFinalidadeService;
 use App\Support\ResumoFinanceiro;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
@@ -24,6 +26,17 @@ class Index extends Component
 {
     #[Url(as: 'apartir_de')]
     public string $apartirDe = '';
+
+    /**
+     * Sem parâmetro na URL, o resumo abre nos últimos 5 anos: 01/01 do ano
+     * atual menos 5. O saldo anterior a essa data entra como "saldo anterior".
+     */
+    public function mount(): void
+    {
+        if ($this->apartirDe === '') {
+            $this->apartirDe = now()->subYears(5)->startOfYear()->toDateString();
+        }
+    }
 
     public function updatedApartirDe(): void
     {
@@ -65,7 +78,7 @@ class Index extends Component
         }
 
         foreach ($lancamentos as $linha) {
-            $chave = $linha->natureza === 'despesa' ? 'despesas' : 'receita';
+            $chave = $linha->natureza === NaturezaLancamento::Despesa ? 'despesas' : 'receita';
             $resumo[$linha->ano][$chave] = ($resumo[$linha->ano][$chave] ?? 0) + (float) $linha->total;
         }
 
@@ -98,9 +111,11 @@ class Index extends Component
             $graficoDados['despesas'][] = round((float) ($dados['despesas'] ?? 0), 2);
         }
 
-        // Apuração de cobranças extraordinárias: pivot de taxas + receitas com origem
+        // Apuração de cobranças extraordinárias: itens de taxa gerados pela
+        // cobrança + receitas com origem nela (Etapa 6 de
+        // 05-plano-composicao-taxas.md — o pivô foi descontinuado)
         $cobrancas = CobrancaExtraordinaria::query()
-            ->withSum('taxasCondominiais as total_taxas', 'cobranca_extraordinaria_taxa.valor')
+            ->withSum('itensTaxa as total_taxas', 'valor')
             ->orderBy('nome')
             ->get();
 
@@ -109,6 +124,18 @@ class Index extends Component
             ->selectRaw('origem_id, COALESCE(SUM(valor), 0) as total')
             ->groupBy('origem_id')
             ->pluck('total', 'origem_id');
+
+        // Recursos carimbados: o saldo das finalidades restritas está no caixa,
+        // mas não pode custear despesa corrente. A leitura é sempre ACUMULADA
+        // desde o início (um fundo não tem recorte de período) — e o saldo
+        // final acima também é, porque inclui o saldo anterior ao filtro.
+        // O disponível sai por SUBTRAÇÃO do saldo final, nunca por uma soma
+        // paralela: assim os dois números não têm como divergir.
+        $rateio = app(RateioPorFinalidadeService::class);
+        $vinculadas = $rateio->vinculadoPorFinalidade();
+        $saldoVinculado = (float) $rateio->somarSaldoVinculado($vinculadas);
+
+        $saldoFinal = $totalGeral + $totalReceita - $totalDespesa + $saldo;
 
         return [
             'unidades' => $unidades,
@@ -119,7 +146,10 @@ class Index extends Component
             'totalDespesa' => $totalDespesa,
             'totalGeral' => $totalGeral,
             'totalReceitas' => $totalGeral + $totalReceita,
-            'saldoFinal' => $totalGeral + $totalReceita - $totalDespesa + $saldo,
+            'saldoFinal' => $saldoFinal,
+            'vinculadas' => $vinculadas,
+            'saldoVinculado' => $saldoVinculado,
+            'disponivelCusteio' => $saldoFinal - $saldoVinculado,
             'graficoDados' => $graficoDados,
             'cobrancas' => $cobrancas,
             'receitasPorCobranca' => $receitasPorCobranca,
