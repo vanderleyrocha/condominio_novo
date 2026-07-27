@@ -19,13 +19,15 @@
 
         {{-- Sidebar --}}
         <aside x-bind:class="menuAberto ? 'translate-x-0' : '-translate-x-full md:translate-x-0'"
-               class="fixed inset-y-0 left-0 z-50 flex w-64 shrink-0 -translate-x-full flex-col bg-slate-900 text-slate-100 transition-transform duration-200 ease-out md:static md:translate-x-0"
+               class="fixed inset-y-0 left-0 z-50 flex h-screen w-64 shrink-0 -translate-x-full flex-col bg-slate-900 text-slate-100 transition-transform duration-200 ease-out md:sticky md:top-0 md:bottom-auto md:translate-x-0"
                aria-label="Navegação principal">
-            <div class="flex items-center gap-3 border-b border-slate-800 px-6 py-5">
-                <span class="flex size-9 shrink-0 items-center justify-center rounded-lg bg-brand text-sm font-bold text-white" aria-hidden="true">
-                    {{ mb_strtoupper(mb_substr(\App\Support\ConfiguracoesCondominio::nomeCondominio(), 0, 1)) }}
-                </span>
-                <span class="truncate text-base font-semibold">{{ \App\Support\ConfiguracoesCondominio::nomeCondominio() }}</span>
+            <div class="flex items-center justify-center border-b border-slate-800 px-6 py-5">
+                <a href="{{ route('painel') }}" class="block rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand">
+                    <img src="{{ asset('assets/img/logo.png') }}"
+                         alt="{{ \App\Support\ConfiguracoesCondominio::nomeCondominio() }}"
+                         class="h-auto w-36"
+                         width="600" height="647">
+                </a>
             </div>
             <nav class="flex-1 space-y-1 overflow-y-auto px-3 py-4 text-sm">
                 <x-nav-link route="painel" label="Painel" />
@@ -35,6 +37,7 @@
                 <x-nav-link route="lancamentos.index" label="Lançamentos" />
                 <x-nav-link route="inadimplencia.index" label="Inadimplência" />
                 <x-nav-link route="resumo.index" label="Resumo financeiro" />
+                <x-nav-link route="relatorios.por-finalidade" label="Por finalidade" />
                 <p class="px-3 pt-5 pb-1.5 text-xs font-semibold uppercase tracking-wider text-slate-500">Cadastros</p>
                 <x-nav-link route="pessoas.index" label="Pessoas" />
                 <x-nav-link route="unidades.index" label="Unidades" />
@@ -43,6 +46,7 @@
                     <x-nav-link route="usuarios.index" label="Usuários" />
                     <x-nav-link route="indices.index" label="Índices econômicos" />
                     <x-nav-link route="cobrancas-extraordinarias.index" label="Cobranças extraordinárias" />
+                    <x-nav-link route="finalidades.index" label="Finalidades" />
                     <x-nav-link route="configuracoes.edit" label="Configurações" />
                 @endcan
             </nav>
@@ -91,7 +95,7 @@
 
             <footer class="flex flex-wrap items-center justify-between gap-2 border-t border-slate-200 bg-white px-4 py-3 text-xs text-slate-500 sm:px-6">
                 <span>&copy; {{ date('Y') }} {{ \App\Support\ConfiguracoesCondominio::nomeCondominio() }} — Todos os direitos reservados.</span>
-                <span class="font-medium text-slate-600">{{ $title ?? '' }}</span>
+                <span class="font-medium text-slate-600">{{ $caminhoBladePagina ?? '' }}</span>
             </footer>
         </div>
     </div>
