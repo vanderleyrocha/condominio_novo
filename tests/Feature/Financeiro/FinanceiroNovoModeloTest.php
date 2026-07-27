@@ -39,8 +39,13 @@ function cenarioUnidadeComResponsavel(): array
 }
 
 it('lança 12 taxas por unidade e bloqueia relançamento do ano', function () {
-    Condominio::factory()->create();
+    $condominio = Condominio::factory()->create();
     Unidade::factory()->count(2)->create();
+
+    // A composição da taxa exige o plano de contas da receita ordinária (R-001).
+    PlanoConta::factory()->receita()->create([
+        'condominio_id' => $condominio->id, 'codigo' => 'R-001', 'descricao' => 'Receita de Taxa Condominial',
+    ]);
 
     $quantidade = app(LancarTaxas::class)->executar(2030, '200.00');
 

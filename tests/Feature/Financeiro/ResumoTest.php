@@ -2,7 +2,9 @@
 
 declare(strict_types=1);
 
-// Testes do redesign do Resumo financeiro (matriz ano × unidades + gráfico).
+// Testes do redesign do Resumo financeiro (cards de indicadores + gráfico).
+// A matriz ano × unidades saiu da tela na refatoração da blade — o Resumo é
+// consolidado, não analítico por unidade.
 
 use App\Actions\Financeiro\RegistrarPagamento;
 use App\Enums\PapelUsuario;
@@ -45,13 +47,14 @@ function cenarioResumoComPagamento(): Unidade
     return $unidade;
 }
 
-it('renderiza o resumo com matriz, cards e dados do gráfico', function () {
+it('renderiza o resumo com cards e dados do gráfico', function () {
     cenarioResumoComPagamento();
 
     Livewire::test(Index::class)
         ->assertOk()
         ->assertSee('Resumo financeiro')
-        ->assertSee('Casa 01')
+        ->assertSee('Receitas')
+        ->assertSee('Saldo final')
         ->assertViewHas('totalReceitas', 100.0)
         ->assertViewHas('graficoDados', function (array $dados) {
             return $dados['anos'] === ['2030']
