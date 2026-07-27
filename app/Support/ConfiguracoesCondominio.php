@@ -59,9 +59,16 @@ final class ConfiguracoesCondominio
         Condominio::query()->whereKey(self::condominioId())->update(['nome' => $nome]);
     }
 
+    /**
+     * Valor da taxa ORDINÁRIA (item ordem 0 da composição), não o total da
+     * mensalidade: as contribuições recorrentes são somadas por cima por
+     * LancarTaxas (05-plano-composicao-taxas.md Etapa 4). O default caiu de
+     * 150,00 para 100,00 justamente porque os 50,00 da pintura passaram a ser
+     * um item próprio — mantê-lo em 150 dobraria a cobrança.
+     */
     public static function taxaMensalidadePadrao(): string
     {
-        return self::get('taxa_mensalidade_padrao', '150.00') ?? '150.00';
+        return self::get('taxa_mensalidade_padrao', '100.00') ?? '100.00';
     }
 
     public static function subtituloRecibo(): string

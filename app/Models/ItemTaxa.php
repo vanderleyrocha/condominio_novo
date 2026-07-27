@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Models;
 
-use App\Enums\NaturezaLancamento;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -13,34 +12,38 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use OwenIt\Auditing\Auditable as AuditableTrait;
 use OwenIt\Auditing\Contracts\Auditable;
 
-class LancamentoFinanceiro extends Model implements Auditable
+/**
+ * Uma linha cobrada dentro da mensalidade (docs/migration/05-plano-composicao-taxas.md §3.2).
+ * A taxa condominial é o contêiner; a soma dos itens é o valor_original da taxa
+ * (invariante da §3.4, mantida por App\Services\ComposicaoTaxaService).
+ *
+ * `ordem` define a ordem de quitação em cascata (D-03): 0 = taxa ordinária,
+ * contribuições depois.
+ */
+class ItemTaxa extends Model implements Auditable
 {
     use AuditableTrait;
     use HasFactory;
     use SoftDeletes;
 
-    protected $table = 'lancamentos_financeiros';
+    protected $table = 'itens_taxa_condominial';
 
     protected $fillable = [
-        'condominio_id', 'plano_conta_id', 'finalidade_id', 'unidade_id',
-        'data_competencia', 'data_lancamento', 'descricao', 'valor',
-        'natureza', 'contabilizado', 'origem_type', 'origem_id',
+        'taxa_condominial_id', 'plano_conta_id', 'finalidade_id',
+        'descricao', 'valor', 'ordem', 'origem_type', 'origem_id',
     ];
 
     protected function casts(): array
     {
         return [
-            'data_competencia' => 'date',
-            'data_lancamento' => 'date',
             'valor' => 'decimal:2',
-            'natureza' => NaturezaLancamento::class,
-            'contabilizado' => 'boolean',
+            'ordem' => 'integer',
         ];
     }
 
-    public function condominio(): BelongsTo
+    public function taxaCondominial(): BelongsTo
     {
-        return $this->belongsTo(Condominio::class);
+        return $this->belongsTo(TaxaCondominial::class);
     }
 
     public function planoConta(): BelongsTo
@@ -48,18 +51,9 @@ class LancamentoFinanceiro extends Model implements Auditable
         return $this->belongsTo(PlanoConta::class);
     }
 
-    /**
-     * Destinação da receita/despesa (05-plano-composicao-taxas.md §3.1) —
-     * null = custeio geral, sem afetação específica.
-     */
     public function finalidade(): BelongsTo
     {
         return $this->belongsTo(Finalidade::class);
-    }
-
-    public function unidade(): BelongsTo
-    {
-        return $this->belongsTo(Unidade::class);
     }
 
     public function origem(): MorphTo

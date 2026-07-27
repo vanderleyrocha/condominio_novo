@@ -33,6 +33,8 @@ class TaxaCondominial extends Model implements Auditable
     {
         return [
             'vencimento' => 'date',
+            // Cache de leitura = SUM(itens.valor) — escrever apenas via
+            // App\Services\ComposicaoTaxaService (invariante 05-plano §3.4)
             'valor_original' => 'decimal:2',
             'valor_desconto' => 'decimal:2',
             'valor_acrescimo' => 'decimal:2',
@@ -45,6 +47,16 @@ class TaxaCondominial extends Model implements Auditable
     public function unidade(): BelongsTo
     {
         return $this->belongsTo(Unidade::class);
+    }
+
+    /**
+     * Composição da mensalidade (05-plano-composicao-taxas.md): a taxa é o
+     * contêiner e cada item é uma linha cobrada. Ordenada por `ordem` porque
+     * essa é a ordem de quitação em cascata usada pelo rateio por finalidade.
+     */
+    public function itens(): HasMany
+    {
+        return $this->hasMany(ItemTaxa::class)->orderBy('ordem')->orderBy('id');
     }
 
     public function pagamentos(): BelongsToMany

@@ -18,7 +18,7 @@ use RuntimeException;
 class SalvarLancamento
 {
     /**
-     * @param  array{plano_conta_id: int, natureza: string, data: string, descricao: string, valor: string, contabilizado: bool, cobranca_extraordinaria_id?: ?int}  $dados
+     * @param  array{plano_conta_id: int, natureza: string, data: string, descricao: string, valor: string, contabilizado: bool, cobranca_extraordinaria_id?: ?int, finalidade_id?: ?int}  $dados
      */
     public function executar(array $dados, ?LancamentoFinanceiro $lancamento = null): LancamentoFinanceiro
     {
@@ -26,6 +26,8 @@ class SalvarLancamento
 
         $atributos = [
             'plano_conta_id' => $dados['plano_conta_id'],
+            // Destinação da receita/despesa (05-plano §3.1); null = custeio geral
+            'finalidade_id' => $dados['finalidade_id'] ?? null,
             'natureza' => $dados['natureza'],
             'data_competencia' => $dados['data'],
             'data_lancamento' => $dados['data'],

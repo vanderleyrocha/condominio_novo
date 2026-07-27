@@ -25,8 +25,10 @@ beforeEach(function () {
 it('lê e grava configurações tipadas escopadas pelo condomínio', function () {
     Condominio::factory()->create(['nome' => 'Meu Condomínio']);
 
-    // Defaults de paridade quando a chave não existe
-    expect(ConfiguracoesCondominio::taxaMensalidadePadrao())->toBe('150.00')
+    // Defaults de paridade quando a chave não existe. A taxa caiu de 150,00
+    // para 100,00 na Etapa 4 de 05-plano-composicao-taxas.md: agora ela é o
+    // valor da ORDINÁRIA, e os 50,00 da pintura são um item próprio.
+    expect(ConfiguracoesCondominio::taxaMensalidadePadrao())->toBe('100.00')
         ->and(ConfiguracoesCondominio::anoInicialFiltroPagamentos())->toBe(2014)
         ->and(ConfiguracoesCondominio::nomeCondominio())->toBe('Meu Condomínio');
 

@@ -62,7 +62,7 @@ Regras:
 | mes                            | competencia_mes                    |
 | ano                            | competencia_ano                    |
 | vencimento                     | vencimento                         |
-| valor                          | valor_original                     |
+| valor                          | valor_original + 1 item em itens_taxa_condominial (ver nota da composição) |
 | desconto                       | valor_desconto                     |
 | acrescimo                      | valor_acrescimo                    |
 | valor_pago                     | NÃO migrar direto — coberto por pagamento_taxa (real ou histórico sintetizado, ver abaixo) |
@@ -77,6 +77,27 @@ Regras de unicidade:
   aplicação (BR-MIGRAR-001) para o nível de banco.
 - O command de migração deve, ainda assim, abortar com relatório claro se encontrar
   duplicata no stage (proteção contra dumps antigos).
+
+Composição da mensalidade (evolução pós-cutover — ver 05-plano-composicao-taxas.md):
+- O legado tem um valor único por competência. No modelo atual, a taxa é o
+  contêiner e o valor devido é a soma dos itens de `itens_taxa_condominial`, com
+  a invariante `valor_original = SUM(itens.valor)`. O mapeamento de uma
+  mensalidade legada é, portanto, **taxa + 1 item ordinário** com o valor integral.
+- Exceção histórica tratada pelo ETL `taxas:decompor-composicao`: as 482 taxas de
+  R$ 150,00 (competências 2024-10 a 2026-09) eram, na verdade, R$ 100,00 de taxa
+  condominial **mais** R$ 50,00 de taxa para pintura do prédio embutidos num único
+  valor. Foram decompostas em dois itens que somam o mesmo total — operação
+  aditiva, sem alterar `valor_original`, `status` nem `pagamento_taxa`.
+
+**Inconsistência N-02** (levantada em 2026-07-26, ainda em aberto): das 182 linhas
+de `cobranca_extraordinaria_taxa` da campanha "Poupança pintura do prédio", 181
+apontavam para taxas de R$ 150,00 (onde os 50,00 estavam embutidos) e **1 aponta
+para a taxa #2010** (unidade 8, competência 06/2024), de R$ 100,00, onde não
+estavam — e 300 das 482 taxas de 150,00 não tinham anotação alguma no pivô. O ETL
+não decompõe a taxa #2010 automaticamente (mudaria o valor devido de uma taxa
+existente) e a reporta como exceção. Decisão pendente: ou a linha do pivô era
+indevida, ou faltou cobrar os R$ 50,00 daquela competência. Enquanto não for
+decidida, `composicao:descomissionar-pivo` recusa remover a tabela.
 
 Regras de status:
 - Definição única: `valor_devido = valor_original + valor_acrescimo - valor_desconto`.
@@ -150,10 +171,16 @@ Migração direta 1:1, apenas trocando as FKs pelos IDs remapeados.
 - `condominio_id` = condomínio único criado na fase 1.
 - `metodo_rateio` = 'manual' como default (schema antigo não guarda a regra de rateio).
 
-## 7. cobranca_extra_mensalidade → cobranca_extraordinaria_taxa
+## 7. cobranca_extra_mensalidade → cobranca_extraordinaria_taxa → itens_taxa_condominial
 
-Migração direta 1:1, trocando FKs pelos IDs remapeados (cobranca_extra_id → cobranca_extraordinaria_id,
-mensalidade_id → taxa_condominial_id).
+Na remodelagem: migração direta 1:1, trocando FKs pelos IDs remapeados
+(cobranca_extra_id → cobranca_extraordinaria_id, mensalidade_id → taxa_condominial_id).
+
+Destino final (Etapa 6 de 05-plano-composicao-taxas.md): o pivô foi
+**descontinuado**. A incidência de uma campanha numa competência passou a ser um
+item de `itens_taxa_condominial` com `origem_type = CobrancaExtraordinaria`, que
+além de registrar o vínculo compõe o valor devido, carrega finalidade e plano de
+contas, e é discriminado ao condômino.
 
 ## 8. despesas + despesa_tipos + receitas → lancamentos_financeiros
 

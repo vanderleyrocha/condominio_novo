@@ -18,14 +18,25 @@ erDiagram
     PESSOAS ||--o{ PAGAMENTOS : realiza
     PESSOAS ||--o{ USERS : acessa
 
+    TAXAS_CONDOMINIAIS ||--o{ ITENS_TAXA_CONDOMINIAL : compoe
     TAXAS_CONDOMINIAIS ||--o{ PAGAMENTO_TAXA : recebe
     PAGAMENTOS ||--o{ PAGAMENTO_TAXA : aplica
     PAGAMENTOS ||--o{ PAGAMENTOS : estorna
 
-    COBRANCAS_EXTRAORDINARIAS ||--o{ COBRANCA_EXTRAORDINARIA_TAXA : gera
-    TAXAS_CONDOMINIAIS ||--o{ COBRANCA_EXTRAORDINARIA_TAXA : compoe
+    %% COBRANCA_EXTRAORDINARIA_TAXA foi descontinuada na Etapa 6 de
+    %% 05-plano-composicao-taxas.md: a incidencia de uma campanha numa
+    %% competencia passou a ser um item em ITENS_TAXA_CONDOMINIAL (origem
+    %% polimorfica), que tambem compoe o valor devido.
+    COBRANCAS_EXTRAORDINARIAS ||--o{ ITENS_TAXA_CONDOMINIAL : gera
 
     PLANOS_CONTAS ||--o{ LANCAMENTOS_FINANCEIROS : classifica
+    PLANOS_CONTAS ||--o{ ITENS_TAXA_CONDOMINIAL : classifica
+
+    %% FINALIDADES: destinacao da arrecadacao, transversal as fontes de receita
+    CONDOMINIOS ||--o{ FINALIDADES : define
+    FINALIDADES ||--o{ ITENS_TAXA_CONDOMINIAL : destina
+    FINALIDADES ||--o{ LANCAMENTOS_FINANCEIROS : destina
+    FINALIDADES ||--o{ COBRANCAS_EXTRAORDINARIAS : destina
 
     %% Regras de reajuste referenciam o TIPO de indice (serie), nao uma linha mensal
 
@@ -107,6 +118,7 @@ erDiagram
         bigint id PK
         bigint condominio_id FK
         bigint plano_conta_id FK
+        bigint finalidade_id FK "nullable = custeio geral"
         bigint unidade_id FK
         date data_competencia
         date data_lancamento
@@ -127,11 +139,44 @@ erDiagram
         tinyint competencia_mes
         smallint competencia_ano
         date vencimento
-        decimal valor_original
+        decimal valor_original "cache = SUM(itens.valor)"
         decimal valor_desconto
         decimal valor_acrescimo
-        enum status
+        enum status "cache = SUM(pagamento_taxa.valor_aplicado)"
         boolean contabilizado
+        timestamp created_at
+        timestamp updated_at
+        timestamp deleted_at
+    }
+
+    %% Linhas cobradas dentro da mensalidade: a soma dos itens E o valor_original
+    %% da taxa (invariante de 03-modelo-dados.md). `ordem` e a ordem de quitacao
+    %% em cascata usada pelo rateio por finalidade.
+    ITENS_TAXA_CONDOMINIAL {
+        bigint id PK
+        bigint taxa_condominial_id FK "UK composta (taxa_condominial_id, descricao)"
+        bigint plano_conta_id FK
+        bigint finalidade_id FK "nullable = custeio geral"
+        string descricao
+        decimal valor
+        smallint ordem "0 = taxa ordinaria"
+        string origem_type
+        bigint origem_id
+        timestamp created_at
+        timestamp updated_at
+        timestamp deleted_at
+    }
+
+    FINALIDADES {
+        bigint id PK
+        bigint condominio_id FK "UK composta (condominio_id, nome)"
+        string nome
+        text descricao
+        decimal meta_valor
+        boolean restrita "recursos carimbados: fora do custeio ordinario"
+        date vigencia_inicio
+        date vigencia_fim
+        boolean ativa
         timestamp created_at
         timestamp updated_at
         timestamp deleted_at
@@ -166,8 +211,10 @@ erDiagram
     COBRANCAS_EXTRAORDINARIAS {
         bigint id PK
         bigint condominio_id FK
+        bigint finalidade_id FK "nullable"
         string nome
-        decimal valor_total
+        decimal valor_total "alvo global da campanha"
+        decimal valor_por_unidade "gera item mensal; null = rateio manual"
         enum metodo_rateio
         date vigencia_inicio
         date vigencia_fim
@@ -175,15 +222,6 @@ erDiagram
         timestamp created_at
         timestamp updated_at
         timestamp deleted_at
-    }
-
-    COBRANCA_EXTRAORDINARIA_TAXA {
-        bigint id PK
-        bigint cobranca_extraordinaria_id FK
-        bigint taxa_condominial_id FK
-        decimal valor
-        timestamp created_at
-        timestamp updated_at
     }
 
     INDICES_ECONOMICOS {

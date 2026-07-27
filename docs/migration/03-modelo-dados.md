@@ -37,7 +37,9 @@ models Eloquent, factories e seeders.
 | pessoas                | cpf_cnpj (múltiplos NULLs permitidos)               |
 | taxas_condominiais     | (unidade_id, competencia_ano, competencia_mes) — a duplicidade legada (N-01) foi saneada; a garantia sobe para o banco |
 | pagamento_taxa         | (pagamento_id, taxa_condominial_id)                 |
-| cobranca_extraordinaria_taxa | (cobranca_extraordinaria_id, taxa_condominial_id) |
+| cobranca_extraordinaria_taxa | (cobranca_extraordinaria_id, taxa_condominial_id) — tabela descontinuada (Etapa 6 de 05-plano) |
+| itens_taxa_condominial | (taxa_condominial_id, descricao)                    |
+| finalidades            | (condominio_id, nome)                               |
 | indices_economicos     | (tipo, ano, mes)                                    |
 | configuracoes          | (condominio_id, chave)                              |
 | condominio_user        | (condominio_id, user_id)                            |
@@ -81,15 +83,64 @@ de várias tabelas específicas. `plano_conta_id` é NOT NULL — todo lançamen
 tem classificação contábil; a origem polimórfica é rastreio, não classificação.
 Na migração, `data_competencia = data_lancamento` (o legado só tem uma data);
 relatórios por competência ficarão idênticos aos por caixa até ajuste manual.
+`finalidade_id` (nullable) registra a destinação do valor — é o que permite
+responder "quanto já arrecadamos para X" somando taxas e receitas avulsas
+(ex.: os rendimentos da poupança da pintura).
 
 ### taxas_condominiais
-Substitui `mensalidades`. O campo `status` é derivado/recalculado a partir da
-soma de pagamentos em `pagamento_taxa` — não deve ser a fonte de verdade isolada,
-apenas um cache de leitura. O recálculo deve viver em um único serviço
-(`valor_devido = valor_original + valor_acrescimo - valor_desconto`, BCMath),
-usado tanto pela migração de dados quanto pela aplicação em produção.
+Substitui `mensalidades`. É o **contêiner** da mensalidade — a "fatura" da
+competência —, cujas linhas cobradas vivem em `itens_taxa_condominial`
+(ver 05-plano-composicao-taxas.md).
+
+Dois campos são cache de leitura, nunca fonte de verdade:
+
+- `status` é derivado da soma de pagamentos em `pagamento_taxa`. O recálculo vive
+  em um único serviço (`App\Services\StatusTaxaService`;
+  `valor_devido = valor_original + valor_acrescimo - valor_desconto`, BCMath),
+  usado tanto pela migração de dados quanto pela aplicação em produção.
+- `valor_original` é derivado da soma dos itens da composição, escrito
+  exclusivamente por `App\Services\ComposicaoTaxaService`.
+
+**Invariante obrigatória:** para toda taxa não excluída,
+`valor_original = SUM(itens_taxa_condominial.valor)` dos itens não excluídos.
+Não é expressável como constraint no MySQL; a garantia é em três camadas —
+serviço único de escrita, o comando `taxas:verificar-composicao` (exit ≠ 0 se
+divergir) e teste automatizado.
+
+`valor_desconto` e `valor_acrescimo` continuam no nível da taxa (valem para a
+mensalidade inteira, não por item).
+
 Unique composta `(unidade_id, competencia_ano, competencia_mes)` no banco.
 `contabilizado` é mantido (decisão fechada — ver 02-mapeamento-de-para.md, seção 3).
+
+### itens_taxa_condominial
+Uma linha cobrada dentro da mensalidade — é o que permite cobrar a taxa
+ordinária **mais** contribuições adicionais de forma discriminada na mesma
+competência (ex.: 100,00 de taxa condominial + 50,00 de taxa para pintura do
+prédio, em vez de um único valor de 150,00).
+
+- `plano_conta_id` NOT NULL: todo item tem classificação contábil.
+- `finalidade_id` nullable: destinação da arrecadação; null = custeio geral.
+- `ordem`: **ordem de quitação em cascata** — o valor pago quita os itens nesta
+  ordem (0 = taxa ordinária, contribuições depois). É a regra de rateio por
+  finalidade (D-03 de 05-plano-composicao-taxas.md); não existe tabela de
+  alocação de pagamento por item, o rateio é derivado.
+- `origem_type`/`origem_id` nullable: rastreio da campanha que gerou o item
+  (`CobrancaExtraordinaria`).
+- Unique `(taxa_condominial_id, descricao)`: impede duplicar a mesma linha na
+  mesma competência (e torna idempotente o ETL de decomposição).
+
+### finalidades
+Destinação (afetação) de receita — "para que serve o dinheiro que entra".
+Transversal a todas as fontes de receita: itens de taxa condominial,
+`lancamentos_financeiros` e `cobrancas_extraordinarias`. Tem `meta_valor`
+(orçamento previsto), vigência opcional e `ativa`. Ex.: "Custeio ordinário",
+"Pintura do prédio".
+
+- `restrita` (boolean, default `false`): recursos carimbados. O saldo dessas
+  finalidades (`arrecadado − gasto`) sai do **disponível para custeio
+  ordinário** no Resumo financeiro, em vez de inflar a impressão de caixa
+  livre. Regras completas em `05-plano-composicao-taxas.md` §3.1.1.
 
 ### pagamentos
 Registra pagamentos efetuados. `estorno_de_id` (auto-relacionamento) substitui
@@ -111,10 +162,19 @@ quite múltiplas taxas ou que uma taxa seja paga em partes.
 ### cobrancas_extraordinarias
 Substitui `cobrancas_extras`. Adiciona `metodo_rateio` para definir como o
 valor é distribuído entre as unidades (fração ideal, igualitário, manual).
+É a **campanha** de arrecadação: `finalidade_id` diz para que serve e
+`valor_por_unidade` é o valor do item gerado em cada competência dentro da
+vigência (`LancarTaxas` e `AplicarCobrancaEmTaxas`). Sem `valor_por_unidade`,
+é apenas um alvo de arrecadação com rateio manual, sem cobrança recorrente.
 
-### cobranca_extraordinaria_taxa
-Substitui `cobranca_extra_mensalidade`. Vincula uma cobrança extraordinária
-às taxas condominiais geradas para cada unidade.
+### ~~cobranca_extraordinaria_taxa~~ (descontinuada)
+Substituía `cobranca_extra_mensalidade`, vinculando uma cobrança extraordinária
+às taxas de cada unidade. **Aposentada** na Etapa 6 de
+05-plano-composicao-taxas.md: o vínculo passou a ser um item em
+`itens_taxa_condominial`, que além de registrar a incidência também compõe o
+valor devido, carrega finalidade e plano de contas, e é discriminado ao
+condômino. Removida por `composicao:descomissionar-pivo`, que só executa depois
+de `composicao:conferir-pivo` acusar cobertura integral.
 
 ### indices_economicos
 Generaliza `ipcas` para suportar múltiplos tipos de índice (IPCA, IGPM, etc.).
