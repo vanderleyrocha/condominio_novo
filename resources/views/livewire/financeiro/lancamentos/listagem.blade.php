@@ -30,6 +30,12 @@
                     <option value="{{ $planoConta->id }}">{{ $planoConta->codigo }} — {{ $planoConta->descricao }}</option>
                 @endforeach
             </x-select>
+            <x-select label="Finalidade" wire:model.live="finalidade" class="w-56">
+                <option value="0">Todas</option>
+                @foreach ($finalidades as $id => $nome)
+                    <option value="{{ $id }}">{{ $nome }}</option>
+                @endforeach
+            </x-select>
             <x-input label="Descrição" wire:model.live.debounce.400ms="descricao" class="w-56" placeholder="Buscar..." />
         </div>
 
@@ -60,6 +66,13 @@
                     <x-input label="Data" type="date" wire:model="formData" />
                     <x-input label="Descrição" wire:model="formDescricao" />
                     <x-input label="Valor (R$)" wire:model="formValor" placeholder="0,00" class="text-right" />
+                    <x-select label="Finalidade" wire:model="formFinalidadeId"
+                              help="Para que serve este dinheiro (ex.: Pintura do prédio).">
+                        <option value="">— sem finalidade específica —</option>
+                        @foreach ($finalidades as $id => $nome)
+                            <option value="{{ $id }}">{{ $nome }}</option>
+                        @endforeach
+                    </x-select>
                     @if ($formNatureza === 'receita')
                         <x-select label="Cobrança extraordinária (origem)" wire:model="formCobrancaId">
                             <option value="">Nenhuma</option>
@@ -89,6 +102,7 @@
                     <th>Natureza</th>
                     <th>Plano</th>
                     <th>Descrição</th>
+                    <th>Finalidade</th>
                     <th>Origem</th>
                     <th>Contab.</th>
                     <th class="text-right">Valor</th>
@@ -106,6 +120,7 @@
                     </td>
                     <td class="text-sm">{{ $lancamento->planoConta->descricao ?? '-' }}</td>
                     <td>{{ $lancamento->descricao }}</td>
+                    <td class="text-sm text-slate-500">{{ $lancamento->finalidade?->nome ?? '—' }}</td>
                     <td class="text-sm">{{ $lancamento->origem?->nome ?? '-' }}</td>
                     <td>{{ $lancamento->contabilizado ? 'Sim' : 'Não' }}</td>
                     <td class="text-right font-medium">R$ {{ \App\Support\DinheiroBr::formatar($lancamento->valor) }}</td>
@@ -117,12 +132,12 @@
                 </tr>
             @empty
                 <tr>
-                    <td colspan="8" class="py-6 text-center text-slate-500">Nenhum lançamento encontrado.</td>
+                    <td colspan="9" class="py-6 text-center text-slate-500">Nenhum lançamento encontrado.</td>
                 </tr>
             @endforelse
             <x-slot:foot>
                 <tr class="font-semibold">
-                    <th colspan="6" class="text-left">
+                    <th colspan="7" class="text-left">
                         Totais do filtro — receitas: R$ {{ \App\Support\DinheiroBr::formatar($totalReceitas) }} /
                         despesas: R$ {{ \App\Support\DinheiroBr::formatar($totalDespesas) }}
                     </th>

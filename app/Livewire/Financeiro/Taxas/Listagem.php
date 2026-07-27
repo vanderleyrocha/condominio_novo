@@ -16,6 +16,8 @@ use Livewire\WithPagination;
  * Listagem de taxas condominiais por unidade/ano (modelo novo — substitui
  * a listagem de mensalidades no cutover). O valor pago é derivado da soma
  * de pagamento_taxa; a data do pagamento é a do último pagamento aplicado.
+ * O valor devido é discriminado pelos itens da composição (Etapa 5 de
+ * docs/migration/05-plano-composicao-taxas.md).
  */
 #[Layout('layouts.app')]
 #[Title('Taxas')]
@@ -71,6 +73,9 @@ class Listagem extends Component
             $taxas = (clone $base)
                 ->withSum('pagamentoTaxas as valor_pago', 'valor_aplicado')
                 ->withMax('pagamentos as ultimo_pagamento', 'data_pagamento')
+                // Composição da mensalidade (05-plano-composicao-taxas.md):
+                // a listagem discrimina os itens que formam o valor devido
+                ->with('itens.finalidade')
                 ->orderBy('competencia_mes')
                 ->paginate(12);
         }

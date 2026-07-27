@@ -9,6 +9,7 @@ use App\Enums\NaturezaLancamento;
 use App\Enums\TipoPlanoConta;
 use App\Models\CobrancaExtraordinaria;
 use App\Models\Condominio;
+use App\Models\Finalidade;
 use App\Models\LancamentoFinanceiro;
 use App\Models\PlanoConta;
 use App\Support\DinheiroBr;
@@ -45,6 +46,10 @@ class Listagem extends Component
     #[Url]
     public int $plano = 0;
 
+    /** Filtro por destinação da receita/despesa (05-plano-composicao-taxas.md) */
+    #[Url]
+    public int $finalidade = 0;
+
     public bool $formAberto = false;
 
     public ?int $lancamentoId = null;
@@ -68,6 +73,9 @@ class Listagem extends Component
     #[Validate('nullable|integer|exists:cobrancas_extraordinarias,id', as: 'Cobrança extraordinária')]
     public ?int $formCobrancaId = null;
 
+    #[Validate('nullable|integer|exists:finalidades,id', as: 'Finalidade')]
+    public ?int $formFinalidadeId = null;
+
     public string $novoPlano = '';
 
     public string $mensagem = '';
@@ -81,7 +89,7 @@ class Listagem extends Component
 
     public function updated(string $propriedade): void
     {
-        if (in_array($propriedade, ['natureza', 'ano', 'mes', 'descricao', 'plano'], true)) {
+        if (in_array($propriedade, ['natureza', 'ano', 'mes', 'descricao', 'plano', 'finalidade'], true)) {
             $this->resetPage();
         }
 
@@ -105,6 +113,7 @@ class Listagem extends Component
         $this->formValor = '0,00';
         $this->formContabilizado = false;
         $this->formCobrancaId = null;
+        $this->formFinalidadeId = null;
         $this->formAberto = true;
         $this->mensagem = '';
     }
@@ -124,6 +133,7 @@ class Listagem extends Component
         $this->formValor = DinheiroBr::formatar($lancamento->valor);
         $this->formContabilizado = (bool) $lancamento->contabilizado;
         $this->formCobrancaId = $lancamento->origem_id !== null ? (int) $lancamento->origem_id : null;
+        $this->formFinalidadeId = $lancamento->finalidade_id;
         $this->formAberto = true;
         $this->mensagem = '';
     }
@@ -189,6 +199,7 @@ class Listagem extends Component
             'valor' => $valor,
             'contabilizado' => $this->formContabilizado,
             'cobranca_extraordinaria_id' => $this->formNatureza === 'receita' ? $this->formCobrancaId : null,
+            'finalidade_id' => $this->formFinalidadeId,
         ], $lancamento);
 
         $this->formAberto = false;
@@ -200,12 +211,13 @@ class Listagem extends Component
     public function render()
     {
         $query = LancamentoFinanceiro::query()
-            ->with(['planoConta', 'origem'])
+            ->with(['planoConta', 'origem', 'finalidade'])
             ->when($this->natureza !== '', fn ($q) => $q->where('natureza', $this->natureza))
             ->when($this->ano !== '', fn ($q) => $q->whereYear('data_lancamento', $this->ano))
             ->when($this->mes !== '', fn ($q) => $q->whereMonth('data_lancamento', $this->mes))
             ->when($this->descricao !== '', fn ($q) => $q->where('descricao', 'like', '%'.$this->descricao.'%'))
-            ->when($this->plano !== 0, fn ($q) => $q->where('plano_conta_id', $this->plano));
+            ->when($this->plano !== 0, fn ($q) => $q->where('plano_conta_id', $this->plano))
+            ->when($this->finalidade !== 0, fn ($q) => $q->where('finalidade_id', $this->finalidade));
 
         $totalReceitas = (string) ((clone $query)->where('natureza', 'receita')->sum('valor') ?: '0');
         $totalDespesas = (string) ((clone $query)->where('natureza', 'despesa')->sum('valor') ?: '0');
@@ -218,6 +230,7 @@ class Listagem extends Component
             'planosDoForm' => PlanoConta::query()->where('tipo', $this->formNatureza)->orderBy('codigo')->get(),
             'cobrancas' => CobrancaExtraordinaria::query()->orderBy('nome')->get(['id', 'nome']),
             'naturezas' => NaturezaLancamento::cases(),
+            'finalidades' => Finalidade::query()->orderBy('nome')->pluck('nome', 'id'),
         ]);
     }
 }

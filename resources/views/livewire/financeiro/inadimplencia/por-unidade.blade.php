@@ -99,7 +99,12 @@
                                     <tbody>
                                         @foreach ($itens as $item)
                                             <tr>
-                                                <td>{{ $item['competencia'] }}</td>
+                                                <td>
+                                                    {{ $item['competencia'] }}
+                                                    @if (count($item['composicao'] ?? []) > 1)
+                                                        <p class="text-xs text-slate-500">{{ implode(' + ', $item['composicao']) }}</p>
+                                                    @endif
+                                                </td>
                                                 <td class="text-right">{{ \App\Support\DinheiroBr::formatar($item['valor_original']) }}</td>
                                                 <td class="text-right">{{ number_format($item['ipca_acumulado'], 4, ',', '.') }}</td>
                                                 <td>{{ $item['periodo'] }}</td>

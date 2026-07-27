@@ -133,6 +133,31 @@
         </tfoot>
     </table>
     <div class="card-footer">
-        <span style="font-size: 1.5rem;">Saldo: <span class="font-weight-bold">{{ \App\Support\DinheiroBr::formatar($total_geral - $total_despesa) }}</span></span>
+        @php
+            $saldo_final = $total_geral - $total_despesa;
+        @endphp
+        <span style="font-size: 1.5rem;">Saldo: <span class="font-weight-bold">{{ \App\Support\DinheiroBr::formatar($saldo_final) }}</span></span>
+
+        {{-- Segregação por destinação: recursos carimbados não custeiam despesa corrente --}}
+        @if ($vinculadas->isNotEmpty())
+            <table class="table table-sm" style="margin-top: 12px; width: 60%;">
+                <tbody>
+                    @foreach ($vinculadas as $linha)
+                        <tr>
+                            <td class="text-left">(−) {{ $linha['finalidade']->nome }} (finalidade vinculada)</td>
+                            <td class="text-right">{{ \App\Support\DinheiroBr::formatar($linha['saldo']) }}</td>
+                        </tr>
+                    @endforeach
+                    <tr>
+                        <th class="text-left">(=) Disponível para custeio ordinário</th>
+                        <th class="text-right">{{ \App\Support\DinheiroBr::formatar($saldo_final - $saldo_vinculado) }}</th>
+                    </tr>
+                </tbody>
+            </table>
+            <p style="font-size: 0.8rem;">
+                O saldo das finalidades vinculadas está em caixa, mas é destinado exclusivamente a elas —
+                não está disponível para despesas correntes de manutenção e administração.
+            </p>
+        @endif
     </div>
 @endsection

@@ -184,6 +184,13 @@
                     <tr>
                         <td class="pmhMiddleLeft bordered">
                             {{ $item['competencia'] }}
+                            {{-- Composição da mensalidade: discriminada só quando
+                                 há mais de um item, para não poluir o histórico --}}
+                            @if (count($item['composicao'] ?? []) > 1)
+                                <br><span style="font-size: 8pt; font-style: italic;">
+                                    {{ implode(' + ', $item['composicao']) }}
+                                </span>
+                            @endif
                         </td>
 
                         <td class="pmhMiddleRight bordered">

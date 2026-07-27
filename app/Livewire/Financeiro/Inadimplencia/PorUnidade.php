@@ -7,6 +7,7 @@ namespace App\Livewire\Financeiro\Inadimplencia;
 use App\Models\TaxaCondominial;
 use App\Models\Unidade;
 use App\Services\CorrecaoMonetariaService;
+use App\Support\DinheiroBr;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
@@ -41,6 +42,7 @@ class PorUnidade extends Component
         $taxas = TaxaCondominial::query()
             ->where('unidade_id', $this->unidade->id)
             ->emAberto()
+            ->with('itens')
             ->orderBy('vencimento')
             ->get();
 
@@ -70,6 +72,10 @@ class PorUnidade extends Component
 
                 $memoria[$ano][] = $correcao->memoriaCalculo($valorLiquido, $taxa->vencimento) + [
                     'competencia' => $taxa->vencimento->format('m/Y'),
+                    // Discriminação da composição (05-plano-composicao-taxas.md)
+                    'composicao' => $taxa->itens
+                        ->map(fn ($item): string => $item->descricao.': '.DinheiroBr::formatar($item->valor))
+                        ->all(),
                 ];
             }
 

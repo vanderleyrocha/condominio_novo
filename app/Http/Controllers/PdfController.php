@@ -4,11 +4,15 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Enums\NaturezaLancamento;
+use App\Models\CobrancaExtraordinaria;
+use App\Models\ItemTaxa;
 use App\Models\LancamentoFinanceiro;
 use App\Models\Pagamento;
 use App\Models\TaxaCondominial;
 use App\Models\Unidade;
 use App\Services\CorrecaoMonetariaService;
+use App\Services\RateioPorFinalidadeService;
 use App\Support\ConfiguracoesCondominio;
 use App\Support\DinheiroBr;
 use App\Support\ResumoFinanceiro;
@@ -16,7 +20,6 @@ use App\Support\TextoPtBr;
 use Carbon\Carbon;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
@@ -150,6 +153,7 @@ class PdfController extends Controller
         $taxas = TaxaCondominial::query()
             ->where('unidade_id', $unidade->id)
             ->emAberto()
+            ->with('itens')
             ->orderBy('vencimento')
             ->get();
 
@@ -183,7 +187,15 @@ class PdfController extends Controller
                     return $this->correcaoService->memoriaCalculo(
                         (float) $t->valor_liquido,
                         $t->vencimento,
-                    ) + ['competencia' => $t->vencimento->format('m/Y')];
+                    ) + [
+                        'competencia' => $t->vencimento->format('m/Y'),
+                        // Discriminação da composição (05-plano-composicao-taxas.md
+                        // Etapa 5): é o que dá transparência ao condômino sobre o
+                        // que compõe o valor cobrado na competência
+                        'composicao' => $t->itens
+                            ->map(fn ($item): string => $item->descricao.': '.DinheiroBr::formatar($item->valor))
+                            ->all(),
+                    ];
                 });
             });
 
@@ -296,13 +308,18 @@ class PdfController extends Controller
         }
 
         foreach ($lancamentos as $linha) {
-            $chave = $linha->natureza === 'despesa' ? 'despesas' : 'receita';
+            $chave = $linha->natureza === NaturezaLancamento::Despesa ? 'despesas' : 'receita';
             $resumo[(string) $linha->ano][$chave] = ($resumo[(string) $linha->ano][$chave] ?? 0) + (float) $linha->total;
         }
 
         ksort($resumo);
 
         [$reservaTaxas, $reservaReceitas] = $this->apurarReservaCobrancas();
+
+        // Mesma segregação da tela: o saldo das finalidades vinculadas não está
+        // disponível para custeio ordinário.
+        $rateio = app(RateioPorFinalidadeService::class);
+        $vinculadas = $rateio->vinculadoPorFinalidade();
 
         $bloco = ConfiguracoesCondominio::get('identificacao_bloco', 'Bloco R-04');
         $url = ConfiguracoesCondominio::get('url_sistema', 'http://r4.condominio.space/');
@@ -315,6 +332,8 @@ class PdfController extends Controller
             'total_imovel' => $totalUnidade,
             'poupanca' => $reservaTaxas,
             'juros_poupanca' => $reservaReceitas,
+            'vinculadas' => $vinculadas,
+            'saldo_vinculado' => (float) $rateio->somarSaldoVinculado($vinculadas),
         ]);
         $pdf->setPaper('A4', 'landscape');
 
@@ -367,14 +386,18 @@ class PdfController extends Controller
     }
 
     /**
-     * Reserva por cobranças extraordinárias (DEV-12): pivot de taxas +
-     * lançamentos de receita com origem em cobrança.
+     * Reserva por cobranças extraordinárias (DEV-12): itens de taxa gerados
+     * pelas cobranças + lançamentos de receita com origem em cobrança.
+     * Etapa 6 de 05-plano-composicao-taxas.md: a fonte deixou de ser o pivô
+     * cobranca_extraordinaria_taxa e passou a ser itens_taxa_condominial.
      *
      * @return array{0: float, 1: float}
      */
     private function apurarReservaCobrancas(): array
     {
-        $reservaTaxas = (float) DB::table('cobranca_extraordinaria_taxa')->sum('valor');
+        $reservaTaxas = (float) ItemTaxa::query()
+            ->where('origem_type', CobrancaExtraordinaria::class)
+            ->sum('valor');
         $reservaReceitas = (float) LancamentoFinanceiro::query()
             ->whereNotNull('origem_id')
             ->where('natureza', 'receita')

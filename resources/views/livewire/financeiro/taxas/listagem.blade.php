@@ -56,7 +56,17 @@
                     <tr wire:key="taxa-{{ $taxa->id }}">
                         <td>{{ \App\Support\MesesBr::nome((int) $taxa->competencia_mes) }}</td>
                         <td>{{ $taxa->vencimento?->format('d/m/Y') ?? '-' }}</td>
-                        <td>R$ {{ \App\Support\DinheiroBr::formatar($taxa->valor_original) }}</td>
+                        <td>
+                            R$ {{ \App\Support\DinheiroBr::formatar($taxa->valor_original) }}
+                            {{-- Discriminação da composição: só faz sentido com mais de um item --}}
+                            @if ($taxa->itens->count() > 1)
+                                <p class="text-xs text-slate-500">
+                                    @foreach ($taxa->itens as $item)
+                                        <span title="{{ $item->finalidade?->nome ?? 'Sem finalidade específica' }}">{{ $item->descricao }}: {{ \App\Support\DinheiroBr::formatar($item->valor) }}</span>@if (! $loop->last)<br>@endif
+                                    @endforeach
+                                </p>
+                            @endif
+                        </td>
                         <td>R$ {{ \App\Support\DinheiroBr::formatar($taxa->valor_acrescimo) }}</td>
                         <td>R$ {{ \App\Support\DinheiroBr::formatar($taxa->valor_desconto) }}</td>
                         <td class="font-medium {{ $corValorPago }}">R$ {{ \App\Support\DinheiroBr::formatar($taxa->valor_pago ?? '0.00') }}</td>
